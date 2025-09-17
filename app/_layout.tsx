@@ -6,6 +6,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
+import '../global.css';
+import { HeroUINativeProvider } from 'heroui-native';
+import { AuthProvider } from '@/lib/auth/AuthContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { useColorScheme } from '@/components/useColorScheme';
 
 export {
@@ -45,15 +50,71 @@ export default function RootLayout() {
   return <RootLayoutNav />;
 }
 
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes
+    },
+  },
+});
+
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-      </Stack>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <HeroUINativeProvider>
+          <AuthProvider>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                // iOS 26 native navigation patterns
+                presentation: 'card',
+                animation: 'slide_from_right',
+                animationDuration: 300,
+                gestureEnabled: true,
+                gestureDirection: 'horizontal',
+              }}
+            >
+              <Stack.Screen 
+                name="index" 
+                options={{ 
+                  headerShown: false,
+                  presentation: 'card' 
+                }} 
+              />
+              <Stack.Screen 
+                name="auth" 
+                options={{ 
+                  headerShown: false,
+                  presentation: 'fullScreenModal',
+                  animation: 'slide_from_bottom',
+                  gestureEnabled: false 
+                }} 
+              />
+              <Stack.Screen 
+                name="onboarding" 
+                options={{ 
+                  headerShown: false,
+                  presentation: 'fullScreenModal',
+                  animation: 'slide_from_bottom',
+                  gestureEnabled: false 
+                }} 
+              />
+              <Stack.Screen 
+                name="(protected)" 
+                options={{ 
+                  headerShown: false,
+                  presentation: 'card' 
+                }} 
+              />
+            </Stack>
+          </AuthProvider>
+        </HeroUINativeProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
