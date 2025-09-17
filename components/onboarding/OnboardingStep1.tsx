@@ -1,10 +1,9 @@
+import { TextField } from '@/components/ui';
+import { Text } from '@/components/ui/text';
+import { useIconColors } from '@/hooks/useIconColors';
+import { useTranslation } from '@/hooks/useTranslation';
 import React from 'react';
 import { View } from 'react-native';
-import { Text } from '@/components/ui/text';
-import { Input } from '@/components/ui/input';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useIconColors } from '@/hooks/useIconColors';
-import { onboardingConfig } from '@/constants/onboarding';
 
 interface OnboardingStep1Props {
   firstName: string;
@@ -36,15 +35,15 @@ export function OnboardingStep1({
           <Text className="mb-2 text-sm font-semibold text-foreground">
             {t('onboarding.step1.firstName')}
           </Text>
-          <Input
-            className="rounded-lg border border-border bg-card text-foreground"
-            style={onboardingConfig.inputSettings}
+          <TextField
             placeholder={t('onboarding.step1.firstNamePlaceholder')}
-            placeholderTextColor={iconColors.muted}
             value={firstName}
             onChangeText={onFirstNameChange}
             autoCapitalize="words"
             autoComplete="given-name"
+            size="lg"
+            variant="bordered"
+            className="text-foreground"
           />
         </View>
 
@@ -52,15 +51,15 @@ export function OnboardingStep1({
           <Text className="mb-2 text-sm font-semibold text-foreground">
             {t('onboarding.step1.lastName')}
           </Text>
-          <Input
-            className="rounded-lg border border-border bg-card text-foreground"
-            style={onboardingConfig.inputSettings}
+          <TextField
             placeholder={t('onboarding.step1.lastNamePlaceholder')}
-            placeholderTextColor={iconColors.muted}
             value={lastName}
             onChangeText={onLastNameChange}
             autoCapitalize="words"
             autoComplete="family-name"
+            size="lg"
+            variant="bordered"
+            className="text-foreground"
           />
         </View>
       </View>

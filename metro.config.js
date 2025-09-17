@@ -11,4 +11,10 @@ const config = getDefaultConfig(__dirname, {
 // Ensure that Metro can resolve .css files
 config.resolver.sourceExts.push('css');
 
+// Add support for gesture handler
+config.resolver.alias = {
+  ...config.resolver.alias,
+  'react-native-gesture-handler': 'react-native-gesture-handler',
+};
+
 module.exports = withNativeWind(config, { input: './global.css' });

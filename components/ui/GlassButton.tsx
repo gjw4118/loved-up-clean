@@ -1,10 +1,12 @@
-// iOS 26 Glass Button Component
-// Combines HeroUI Button with native BlurView for authentic iOS glass effect
+// Enhanced Glass Button Component
+// Uses HeroUI Button as base with iOS 26 glass effects overlay
 
-import React from 'react';
-import { View, Pressable, Text } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
+import { Button } from 'heroui-native';
+import React from 'react';
+import { View } from 'react-native';
 
 interface GlassButtonProps {
   children: React.ReactNode;
@@ -18,6 +20,8 @@ interface GlassButtonProps {
   variant?: 'primary' | 'secondary' | 'ghost';
   startContent?: React.ReactNode;
   endContent?: React.ReactNode;
+  radius?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
 }
 
 export default function GlassButton({
@@ -32,6 +36,8 @@ export default function GlassButton({
   variant = 'primary',
   startContent,
   endContent,
+  radius = 'xl',
+  color = 'default',
 }: GlassButtonProps) {
   const handlePress = async () => {
     if (disabled || loading) return;
@@ -40,67 +46,43 @@ export default function GlassButton({
     onPress?.();
   };
 
-  const sizeClasses = {
-    sm: 'h-10 px-4',
-    md: 'h-12 px-6',
-    lg: 'h-14 px-8',
-  };
-
-  const variantStyles = {
-    primary: 'border-white/30',
-    secondary: 'border-gray-300/30',
-    ghost: 'border-transparent',
-  };
+  // Map our variants to HeroUI variants
+  const heroUIVariant = variant === 'primary' ? 'solid' : 
+                       variant === 'secondary' ? 'bordered' : 'ghost';
 
   return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled || loading}
-      className={`
-        relative overflow-hidden rounded-xl
-        ${sizeClasses[size]}
-        ${className}
-        ${disabled ? 'opacity-50' : ''}
-      `}
-      style={({ pressed }) => ({
-        opacity: pressed && !disabled ? 0.8 : 1,
-        transform: [{ scale: pressed && !disabled ? 0.98 : 1 }],
-      })}
-    >
-      {/* iOS 26 Glass Background */}
-      <BlurView
-        intensity={intensity}
-        tint={tint}
-        className="absolute inset-0"
-      />
+    <View className={`relative ${className}`}>
+      {/* Glass Effect Overlay */}
+      {isLiquidGlassAvailable() ? (
+        <GlassView
+          glassEffectStyle="regular"
+          isInteractive={false}
+          tintColor={tint === 'light' ? '#FFFFFF' : tint === 'dark' ? '#000000' : undefined}
+          className="absolute inset-0 rounded-xl"
+        />
+      ) : (
+        <BlurView
+          intensity={intensity}
+          tint={tint === 'system' ? 'default' : tint}
+          className="absolute inset-0 rounded-xl"
+        />
+      )}
       
-      {/* Glass Border */}
-      <View className={`absolute inset-0 rounded-xl border ${variantStyles[variant]}`} />
-      
-      {/* Content Container */}
-      <View className="relative z-10 flex-1 flex-row items-center justify-center space-x-2">
-        {startContent && (
-          <View>{startContent}</View>
-        )}
-        
-        {loading ? (
-          <View className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-        ) : (
-          <View className="flex-row items-center space-x-2">
-            {typeof children === 'string' ? (
-              <Text className="text-white font-semibold text-base">
-                {children}
-              </Text>
-            ) : (
-              children
-            )}
-          </View>
-        )}
-        
-        {endContent && (
-          <View>{endContent}</View>
-        )}
-      </View>
-    </Pressable>
+      {/* HeroUI Button */}
+      <Button
+        onPress={handlePress}
+        disabled={disabled}
+        isLoading={loading}
+        size={size}
+        variant={heroUIVariant}
+        color={color}
+        radius={radius}
+        startContent={startContent}
+        endContent={endContent}
+        className="relative z-10 bg-transparent border-white/20"
+      >
+        {children}
+      </Button>
+    </View>
   );
 }

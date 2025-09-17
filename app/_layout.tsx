@@ -6,16 +6,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import '../global.css';
-import { HeroUINativeProvider } from 'heroui-native';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HeroUINativeProvider } from 'heroui-native';
+import '../global.css';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
 export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+    // Catch any errors thrown by the Layout component.
+    ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -66,7 +66,11 @@ function RootLayoutNav() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <HeroUINativeProvider>
+        <HeroUINativeProvider
+          config={{
+            colorScheme: colorScheme === 'dark' ? 'dark' : 'light',
+          }}
+        >
           <AuthProvider>
             <Stack
               screenOptions={{
@@ -95,17 +99,16 @@ function RootLayoutNav() {
                   gestureEnabled: false 
                 }} 
               />
+              {/* Onboarding route removed - not needed for MVP */}
               <Stack.Screen 
-                name="onboarding" 
+                name="(tabs)" 
                 options={{ 
                   headerShown: false,
-                  presentation: 'fullScreenModal',
-                  animation: 'slide_from_bottom',
-                  gestureEnabled: false 
+                  presentation: 'card' 
                 }} 
               />
               <Stack.Screen 
-                name="(protected)" 
+                name="questions/[deckId]" 
                 options={{ 
                   headerShown: false,
                   presentation: 'card' 

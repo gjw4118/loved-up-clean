@@ -1,13 +1,12 @@
-import React from 'react';
-import { View, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { Link } from 'expo-router';
-import { useIconColors } from '@/hooks/useIconColors';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { Button, TextField } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
-import { Text } from '@/components/ui/text';
-import { Input } from '@/components/ui/input';
+import { useIconColors } from '@/hooks/useIconColors';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from 'expo-router';
+import React from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import * as z from 'zod';
 
 const loginSchema = z.object({
   email: z.string().email('Adresse email invalide'),
@@ -56,14 +55,7 @@ export function EmailLoginForm({ onSuccess, onCancel }: EmailLoginFormProps) {
           control={control}
           name="email"
           render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              className="rounded-lg border border-border bg-card px-4 text-foreground"
-              style={{
-                minHeight: 50,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                fontSize: 16,
-              }}
+            <TextField
               placeholder="Email"
               autoCapitalize="none"
               autoComplete="email"
@@ -72,6 +64,9 @@ export function EmailLoginForm({ onSuccess, onCancel }: EmailLoginFormProps) {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              size="lg"
+              variant="bordered"
+              className="text-foreground"
             />
           )}
         />
@@ -86,14 +81,7 @@ export function EmailLoginForm({ onSuccess, onCancel }: EmailLoginFormProps) {
           control={control}
           name="password"
           render={({ field: { onChange, onBlur, value } }) => (
-            <Input
-              className="rounded-lg border border-border bg-card px-4 text-foreground"
-              style={{
-                minHeight: 50,
-                paddingVertical: 12,
-                paddingHorizontal: 16,
-                fontSize: 16,
-              }}
+            <TextField
               placeholder="Mot de passe"
               autoCapitalize="none"
               autoCorrect={false}
@@ -101,6 +89,9 @@ export function EmailLoginForm({ onSuccess, onCancel }: EmailLoginFormProps) {
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
+              size="lg"
+              variant="bordered"
+              className="text-foreground"
             />
           )}
         />
@@ -129,24 +120,16 @@ export function EmailLoginForm({ onSuccess, onCancel }: EmailLoginFormProps) {
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity
-                    className={`w-full items-center justify-center rounded-lg bg-primary ${isSubmitting ? 'opacity-50' : ''}`}
-        style={{
-          minHeight: 50,
-          paddingVertical: 12,
-          paddingHorizontal: 16,
-          marginTop: 8,
-        }}
+      <Button
+        className="w-full mt-2"
+        size="lg"
+        color="primary"
         onPress={handleSubmit(onSubmit)}
-        disabled={isSubmitting}>
-        {isSubmitting ? (
-          <ActivityIndicator size="small" color={iconColors.primary}/>
-        ) : (
-          <Text className="text-white" style={{ fontSize: 16, fontWeight: '600' }}>
-            Se connecter
-          </Text>
-        )}
-      </TouchableOpacity>
+        isLoading={isSubmitting}
+        disabled={isSubmitting}
+      >
+        Se connecter
+      </Button>
     </View>
   );
 }

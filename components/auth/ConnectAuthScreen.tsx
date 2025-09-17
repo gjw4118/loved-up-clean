@@ -1,13 +1,12 @@
 // Connect App Authentication Screen
 // Hybrid UI: HeroUI Native + iOS 26 Glass Components
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, SafeAreaView } from 'react-native';
-import { LinearGradient, StatusBar } from '@/components/ui';
-import { GlassCard, GlassButton } from '@/components/ui';
-import { signInWithApple, signInWithGoogle, isAppleSignInAvailable } from '@/lib/auth/supabase-auth';
-import { router } from 'expo-router';
+import { GlassButton, GlassCard, LinearGradient, StatusBar } from '@/components/ui';
+import { isAppleSignInAvailable, signInWithApple, signInWithGoogle } from '@/lib/auth/supabase-auth';
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { Alert, SafeAreaView, Text, View } from 'react-native';
 
 export default function ConnectAuthScreen() {
   const [loading, setLoading] = useState(false);

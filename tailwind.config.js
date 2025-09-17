@@ -1,12 +1,23 @@
 /** @type {import('tailwindcss').Config} */
-const heroUINativePlugin = require('heroui-native/tailwind-plugin');
-
 module.exports = {
-  // NOTE: Update this to include the paths to all of your component files.
-  content: ["./app/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}"],
-  presets: [require("nativewind/preset")],
+  content: [
+    './app/**/*.{js,jsx,ts,tsx}',
+    './components/**/*.{js,jsx,ts,tsx}',
+    './node_modules/heroui-native/lib/**/*.{js,ts,jsx,tsx}',
+  ],
+  presets: [require('nativewind/preset')],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        // Add your custom colors here if needed
+        'deck-friends': '#FF6B35',
+        'deck-family': '#4ECDC4',
+        'deck-romantic': '#E74C3C',
+        'deck-professional': '#3498DB',
+      },
+    },
   },
-  plugins: [heroUINativePlugin()],
+  plugins: [
+    require('heroui-native/tailwind-plugin'),
+  ],
 }

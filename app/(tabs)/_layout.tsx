@@ -1,62 +1,33 @@
+import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
-import { Tabs } from 'expo-router';
-import { GlassTabBar } from '@/components/ui';
-import { Text } from 'react-native';
-
-// Icons for Connect app tabs
-const HomeIcon = ({ color, size }: { color: string; size: number }) => (
-  <Text style={{ color, fontSize: size }}>🏠</Text>
-);
-
-const DecksIcon = ({ color, size }: { color: string; size: number }) => (
-  <Text style={{ color, fontSize: size }}>🎯</Text>
-);
-
-const FavoritesIcon = ({ color, size }: { color: string; size: number }) => (
-  <Text style={{ color, fontSize: size }}>❤️</Text>
-);
-
-const ProfileIcon = ({ color, size }: { color: string; size: number }) => (
-  <Text style={{ color, fontSize: size }}>👤</Text>
-);
 
 export default function TabLayout() {
   return (
-    <Tabs
-      tabBar={(props) => <GlassTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-        tabBarHideOnKeyboard: true,
-      }}
+    <NativeTabs
+      backgroundColor="rgba(0,0,0,0.8)"
+      tintColor="#FF6B35"
+      iconColor="#9CA3AF"
+      blurEffect="systemMaterialDark"
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: HomeIcon,
-        }}
-      />
-      <Tabs.Screen
-        name="decks"
-        options={{
-          title: 'Decks',
-          tabBarIcon: DecksIcon,
-        }}
-      />
-      <Tabs.Screen
-        name="favorites"
-        options={{
-          title: 'Favorites',
-          tabBarIcon: FavoritesIcon,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ProfileIcon,
-        }}
-      />
-    </Tabs>
+      <NativeTabs.Trigger name="index">
+        <Icon sf="house" />
+        <Label>Home</Label>
+      </NativeTabs.Trigger>
+      
+      <NativeTabs.Trigger name="decks">
+        <Icon sf="target" />
+        <Label>Decks</Label>
+      </NativeTabs.Trigger>
+      
+      <NativeTabs.Trigger name="favorites">
+        <Icon sf="heart" />
+        <Label>Favorites</Label>
+      </NativeTabs.Trigger>
+      
+      <NativeTabs.Trigger name="profile">
+        <Icon sf="person" />
+        <Label>Profile</Label>
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

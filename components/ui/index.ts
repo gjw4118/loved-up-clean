@@ -1,65 +1,52 @@
 // Hybrid UI System: HeroUI Native + iOS 26 Glass Components
-// Based on user preference for HeroUI standard + Expo iOS native components
+// Prioritizing HeroUI Native components with glass effects overlay
 
 // ===== PRIMARY: HeroUI Native Components =====
-// Use these as the main UI foundation
+// Use these as the main UI foundation - these are our primary components
 export {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  CardFooter,
-  Avatar,
-  Badge,
-  Chip,
-  Divider,
-  Spinner,
-  Skeleton,
-  Switch,
-  Checkbox,
-  Accordion,
-  AccordionItem,
-  HeroUINativeProvider,
+    Accordion, Avatar, Button,
+    Card, Checkbox, Chip,
+    Divider, DropShadowView,
+    ErrorView, FormField,
+    Radio, RadioGroup, ScrollShadow, Skeleton, SkeletonGroup, Spinner, Surface, Switch, TextField
 } from 'heroui-native';
+
+// ===== HEROUI PROVIDERS & THEME =====
+// Theme and provider components
+export { HeroUINativeProvider, ThemeProvider } from 'heroui-native';
 
 // ===== iOS 26 NATIVE GLASS COMPONENTS =====
 // Use these for authentic iOS glass/blur effects
-export { BlurView } from 'expo-blur';
-export { LinearGradient } from 'expo-linear-gradient';
+export { BlurView } from 'expo-blur'; // Fallback for older iOS versions
+export { GlassContainer, GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 export * as Haptics from 'expo-haptics';
+export { LinearGradient } from 'expo-linear-gradient';
 export { StatusBar } from 'expo-status-bar';
 
 // ===== EXPO NATIVE MODULES =====
 // iOS native functionality
-export * as ImagePicker from 'expo-image-picker';
-export * as Notifications from 'expo-notifications';
-export * as Device from 'expo-device';
-export * as Constants from 'expo-constants';
-export * as Linking from 'expo-linking';
+// export * as Accessibility from 'expo-accessibility'; // Temporarily disabled
 export * as Clipboard from 'expo-clipboard';
+export * as Constants from 'expo-constants';
+export * as Device from 'expo-device';
+export * as Linking from 'expo-linking';
 export * as Sharing from 'expo-sharing';
-export * as Accessibility from 'expo-accessibility';
 
 // ===== REACT NATIVE CORE =====
 // Minimal usage - prefer HeroUI when available
-export { 
-  View, 
-  Text, 
-  ScrollView, 
-  TouchableOpacity, 
-  ActivityIndicator,
-  SafeAreaView,
-  Pressable,
-  Alert
+export {
+    ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, TouchableOpacity, View
 } from 'react-native';
 
 // ===== EXPO ROUTER =====
-export { Link, router, useRouter, useLocalSearchParams } from 'expo-router';
+export { Link, router, useLocalSearchParams, useRouter } from 'expo-router';
 
-// ===== CUSTOM iOS 26 GLASS COMPONENTS =====
-// Custom components that combine HeroUI + iOS glass effects
-export { default as GlassCard } from './GlassCard';
+// ===== GLASS-ENHANCED COMPONENTS =====
+// These combine HeroUI components with glass effects
 export { default as GlassButton } from './GlassButton';
-export { default as GlassModal } from './GlassModal';
+export { default as GlassCard } from './GlassCard';
 export { default as GlassTabBar } from './GlassTabBar';
-export { default as GlassHeader } from './GlassHeader';
+
+// ===== LEGACY CUSTOM COMPONENTS (REMOVED) =====
+// Custom button and text components removed - using HeroUI equivalents
+

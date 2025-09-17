@@ -1,18 +1,17 @@
-import React from 'react';
-import { View, TouchableOpacity, Pressable } from 'react-native';
-import { DrawerContentScrollView, DrawerContentComponentProps } from '@react-navigation/drawer';
-import { DrawerActions } from '@react-navigation/native';
-import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { usePathname, useRouter } from 'expo-router';
-import { Text } from '@/components/ui/text';
-import { useTheme } from '@/context/ThemeContext';
-import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { navigationItems } from '@/constants/navigation';
 import { useRevenueCat } from '@/context/RevenuCatContext';
+import { useTheme } from '@/context/ThemeContext';
+import { useIconColors } from '@/hooks/useIconColors';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Icons } from '@/icons';
-import { navigationItems } from '@/constants/navigation';
-import { useIconColors } from '@/hooks/useIconColors';
+import { DrawerContentComponentProps, DrawerContentScrollView } from '@react-navigation/drawer';
+import { DrawerActions } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import { usePathname, useRouter } from 'expo-router';
+import React from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Custom Drawer Content Component
 export const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props) => {

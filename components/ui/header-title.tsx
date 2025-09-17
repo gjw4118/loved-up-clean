@@ -1,8 +1,7 @@
-import React from 'react';
-import { View, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '@/components/ui/text';
 import { HeaderMenu } from '@/components/ui/header-menu';
+import React from 'react';
+import { Platform, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface HeaderTitleProps {
   title: string;

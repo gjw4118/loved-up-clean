@@ -8,9 +8,17 @@ import * as Crypto from 'expo-crypto';
 
 // Configure Google Sign-In
 export const configureGoogleSignIn = () => {
+  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+  
+  if (!webClientId || !iosClientId) {
+    console.warn('Google Sign-In not configured: Missing environment variables');
+    return;
+  }
+  
   GoogleSignin.configure({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    webClientId,
+    iosClientId,
   });
 };
 
@@ -72,6 +80,11 @@ export const signInWithApple = async () => {
 // Google Sign-In
 export const signInWithGoogle = async () => {
   try {
+    // Check if Google Sign-In is configured
+    if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || !process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID) {
+      throw new Error('Google Sign-In not configured');
+    }
+    
     await GoogleSignin.hasPlayServices();
     const userInfo = await GoogleSignin.signIn();
 
