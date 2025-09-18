@@ -49,7 +49,7 @@ Tabs.displayName = 'Tabs';
 
 const TabsList = ({ className = '', children }: TabsListProps) => {
   return (
-    <View className={`flex-row bg-white/10 rounded-lg p-1 ${className}`}>
+    <View className={`flex-row bg-white/10 rounded-lg p-1 mb-4 ${className}`}>
       {children}
     </View>
   );
@@ -65,9 +65,9 @@ const TabsTrigger = ({ value, className = '', children }: TabsTriggerProps) => {
   return (
     <Pressable
       onPress={() => setActiveTab(value)}
-      className={`flex-1 py-2 px-3 rounded-md ${isActive ? 'bg-white/20' : ''} ${className}`}
+      className={`flex-1 py-3 px-2 rounded-md ${isActive ? 'bg-white/20' : 'bg-transparent'} ${className}`}
     >
-      <Text className={`text-center font-medium ${isActive ? 'text-white' : 'text-white/70'}`}>
+      <Text className={`text-center font-medium text-xs ${isActive ? 'text-white' : 'text-white/70'}`}>
         {children}
       </Text>
     </Pressable>

@@ -72,3 +72,4 @@ expo-env.d.ts
 
 # Embedded repositories
 my-expo-app/
+.vercel

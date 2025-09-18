@@ -9,7 +9,7 @@ import { Dimensions, Pressable, SafeAreaView, ScrollView, Text, View } from 'rea
 
 import { StatusBar } from '@/components/ui';
 import { getDeckColor } from '@/constants/Colors';
-import { HARDCODED_DECKS } from '@/constants/hardcodedQuestions';
+import { useQuestionDecks } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/hooks/useTheme';
@@ -52,7 +52,7 @@ const DECK_ICONS = {
 } as const;
 
 export default function MainDecksScreen() {
-  const decks = HARDCODED_DECKS;
+  const { data: decks, isLoading: decksLoading } = useQuestionDecks();
   const { theme, isDark } = useTheme();
   const { isPremium } = usePremiumStatus();
   const { isPresenting, presentPaywall } = usePaywall();
@@ -71,6 +71,24 @@ export default function MainDecksScreen() {
       params: { deckId, deckName }
     });
   };
+
+  // Show loading state
+  if (decksLoading || !decks) {
+    return (
+      <SafeAreaView className="flex-1">
+        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <LinearGradient
+          colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-lg text-gray-800 dark:text-white mb-4">
+            Loading decks...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
 
   return (

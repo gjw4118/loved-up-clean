@@ -7,13 +7,13 @@ import React, { useCallback } from 'react';
 import { Dimensions, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-    Extrapolate,
-    interpolate,
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  Extrapolate,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { getDeckColor } from '@/constants/Colors';
@@ -46,6 +46,17 @@ export default function QuestionCard({
 }: QuestionCardProps) {
   // Theme
   const { isDark } = useTheme();
+  
+  // Safety check for question
+  if (!question || !question.text) {
+    return (
+      <View className="items-center justify-center flex-1 px-6">
+        <View className="w-full h-96 rounded-3xl items-center justify-center bg-gray-100 dark:bg-gray-800">
+          <Text className="text-lg text-gray-600 dark:text-gray-300">Loading question...</Text>
+        </View>
+      </View>
+    );
+  }
   
   // Animation values
   const translateX = useSharedValue(0);
@@ -232,7 +243,7 @@ export default function QuestionCard({
                   fontFamily: 'System', // Keep system font but with better weight
                 }}
               >
-                {question.text}
+                {question.text || 'Loading question...'}
               </Text>
             </View>
           </View>

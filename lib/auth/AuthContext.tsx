@@ -81,6 +81,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Development bypass: skip Supabase initialization
     if (DEV_BYPASS_AUTH) {
       console.log('AuthContext: DEV BYPASS - Skipping Supabase initialization');
+      
+      // Set mock user and profile data for development
+      const mockUser = {
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        aud: 'authenticated',
+        role: 'authenticated',
+        app_metadata: {},
+        user_metadata: {},
+        identities: [],
+        factors: [],
+      } as User;
+      
+      const mockProfile = {
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        avatar_url: undefined,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as UserProfile;
+      
+      setUser(mockUser);
+      setProfile(mockProfile);
       setLoading(false);
       return;
     }

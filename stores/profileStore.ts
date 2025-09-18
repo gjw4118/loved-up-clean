@@ -32,8 +32,25 @@ interface ProfileState {
 export const useProfileStore = create<ProfileState>()(
   persist(
     (set, get) => ({
-      // Initial state
-      profile: null,
+      // Initial state - with mock data for development
+      profile: {
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        avatar_url: undefined,
+        is_paid: false,
+        is_premium: false,
+        expo_push_token: undefined,
+        push_notifications_enabled: true,
+        email_notifications_enabled: true,
+        marketing_notifications_enabled: false,
+        onboarding_completed: true,
+        lang: 'en',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        stripe_customer_id: undefined,
+      },
       loading: false,
       error: null,
 

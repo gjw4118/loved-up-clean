@@ -16,7 +16,9 @@
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit",
     "seed": "node scripts/seed-questions.js",
-    "seed:dev": "NODE_ENV=development node scripts/seed-questions.js"
+    "seed:dev": "NODE_ENV=development node scripts/seed-questions.js",
+    "deploy:backend": "./scripts/deploy-backend.sh",
+    "setup:env": "cp env.template .env.local && echo 'Please edit .env.local with your actual values'"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

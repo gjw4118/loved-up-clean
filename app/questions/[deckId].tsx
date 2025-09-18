@@ -9,13 +9,13 @@ import { ActivityIndicator, Alert, Pressable, SafeAreaView, Text, View } from 'r
 
 import QuestionCard from '@/components/cards/QuestionCard';
 import { GlassButton, StatusBar } from '@/components/ui';
-import { getDeckColor } from '@/constants/Colors';
-import { getHardcodedDeck, getHardcodedQuestions, HardcodedQuestion } from '@/constants/hardcodedQuestions';
+import Colors, { getDeckColor } from '@/constants/Colors';
+import { useQuestionDecks, useQuestions } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/hooks/useTheme';
 import { useQuestionStore } from '@/stores/questionStore';
-import { DeckCategory, Question, QuestionDeck } from '@/types/questions';
+import { QuestionDeck } from '@/types/questions';
 
 export default function QuestionBrowsingScreen() {
   const { deckId, deckName } = useLocalSearchParams<{
@@ -23,37 +23,21 @@ export default function QuestionBrowsingScreen() {
     deckName: string;
   }>();
 
-  const { theme, isDark } = useTheme();
+  const { theme: themeMode, isDark } = useTheme();
+  const colors = Colors[themeMode] || Colors.light;
+  
+  // Safety check for isDark
+  const safeIsDark = isDark || false;
 
-  // Get hardcoded data
-  const hardcodedDeck = getHardcodedDeck(deckId || '');
-  const hardcodedQuestions = getHardcodedQuestions(deckId || '');
+  // Fetch data from Supabase
+  const { data: decks, isLoading: decksLoading } = useQuestionDecks();
+  const { data: allQuestions, isLoading: questionsLoading } = useQuestions(deckId || '', {
+    limit: 100, // Get more questions for better experience
+    excludeInteracted: false, // Show all questions for now
+  });
   
-  // Convert HardcodedDeck to QuestionDeck type
-  const deck: QuestionDeck | undefined = hardcodedDeck ? {
-    id: hardcodedDeck.id,
-    name: hardcodedDeck.name,
-    description: hardcodedDeck.description,
-    category: hardcodedDeck.category as DeckCategory,
-    icon: hardcodedDeck.icon,
-    question_count: hardcodedDeck.question_count,
-    popularity_score: hardcodedDeck.popularity_score,
-    created_at: hardcodedDeck.created_at,
-    updated_at: hardcodedDeck.updated_at,
-  } : undefined;
-  
-  // Convert HardcodedQuestion to Question type
-  const allQuestions: Question[] = hardcodedQuestions.map((q: HardcodedQuestion) => ({
-    id: q.id,
-    deck_id: q.deck_id,
-    text: q.text,
-    difficulty_level: q.difficulty_level as any, // Type assertion since enum values match
-    tags: q.tags,
-    completion_rate: q.completion_rate,
-    skip_rate: q.skip_rate,
-    created_at: q.created_at,
-    updated_at: q.updated_at,
-  }));
+  // Find the current deck
+  const deck: QuestionDeck | undefined = decks?.find(d => d.id === deckId);
   
   const { isPremium, loading: premiumLoading } = usePremiumStatus();
   const { isPresenting, presentPaywall } = usePaywall();
@@ -70,7 +54,10 @@ export default function QuestionBrowsingScreen() {
     ? allQuestions || []
     : allQuestions?.slice(0, FREE_QUESTIONS_LIMIT) || [];
   
-  const hasHitLimit = !isPremium && allQuestions && allQuestions.length > FREE_QUESTIONS_LIMIT;
+  const hasHitLimit = !(isPremium || false) && (allQuestions?.length || 0) > FREE_QUESTIONS_LIMIT;
+
+  // Loading state
+  const isLoading = decksLoading || questionsLoading || premiumLoading;
 
   // Store
   const {
@@ -98,6 +85,41 @@ export default function QuestionBrowsingScreen() {
       startSession(deck, availableQuestions);
     }
   }, [availableQuestions, deck, currentSession, startSession, endSession, deckId]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <StatusBar />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.tint} />
+          <Text style={{ marginTop: 16, color: colors.text, fontSize: 16 }}>
+            Loading questions...
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if no deck or questions found
+  if (!deck || !allQuestions || allQuestions.length === 0) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+        <StatusBar />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <Text style={{ color: colors.text, fontSize: 18, textAlign: 'center', marginBottom: 16 }}>
+            No questions found for this deck
+          </Text>
+          <GlassButton
+            onPress={() => router.back()}
+            style={{ paddingHorizontal: 24, paddingVertical: 12 }}
+          >
+            <Text style={{ color: colors.text, fontWeight: '600' }}>Go Back</Text>
+          </GlassButton>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // Handle question completion
   const handleComplete = async (questionId: string) => {
@@ -193,12 +215,12 @@ export default function QuestionBrowsingScreen() {
     return (
       <SafeAreaView className="flex-1">
         <LinearGradient
-          colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+          colors={safeIsDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <StatusBar style={safeIsDark ? 'light' : 'dark'} />
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color={isDark ? '#ffffff' : '#374151'} />
+          <ActivityIndicator size="large" color={safeIsDark ? '#ffffff' : '#374151'} />
           <Text className="text-lg mt-4 text-gray-800 dark:text-white">Loading premium status...</Text>
         </View>
       </SafeAreaView>
@@ -248,10 +270,10 @@ export default function QuestionBrowsingScreen() {
     return (
       <SafeAreaView className="flex-1">
         <LinearGradient
-          colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+          colors={safeIsDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <StatusBar style={safeIsDark ? 'light' : 'dark'} />
         <View className="flex-1 justify-center items-center px-8">
           <View className="w-20 h-20 rounded-full items-center justify-center mb-4 bg-gray-200 dark:bg-gray-700">
             <Text className="text-3xl font-bold text-gray-600 dark:text-gray-300">!</Text>
@@ -280,12 +302,12 @@ export default function QuestionBrowsingScreen() {
     return (
       <SafeAreaView className="flex-1">
         <LinearGradient
-          colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+          colors={safeIsDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
-        <StatusBar style={isDark ? 'light' : 'dark'} />
+        <StatusBar style={safeIsDark ? 'light' : 'dark'} />
         <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" color={isDark ? '#ffffff' : '#374151'} />
+          <ActivityIndicator size="large" color={safeIsDark ? '#ffffff' : '#374151'} />
           <Text className="text-lg mt-4 text-gray-800 dark:text-white">
             Loading question...
           </Text>
@@ -298,27 +320,26 @@ export default function QuestionBrowsingScreen() {
   const questionNumber = getCurrentQuestionNumber();
   
   // Safety checks for progress calculation
-  const safeProgressTotal = progress.total || 1;
+  const safeProgressTotal = progress?.total || 1;
   const safeQuestionNumber = questionNumber || 1;
 
   return (
     <SafeAreaView className="flex-1">
       {/* Background */}
       <LinearGradient
-        colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+        colors={safeIsDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
       
       {/* Subtle Glass Overlay */}
-      <View className={`absolute inset-0 ${isDark ? 'bg-white/5' : 'bg-black/5'}`} />
-      <StatusBar style={isDark ? 'light' : 'dark'} />
-
+      <View className={`absolute inset-0 ${safeIsDark ? 'bg-white/5' : 'bg-black/5'}`} />
+      <StatusBar style={safeIsDark ? 'light' : 'dark'} />
 
       {/* Header */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <Pressable
           onPress={handleBack}
-          className={`backdrop-blur-sm rounded-2xl px-4 py-3 border ${isDark ? 'bg-white/20 border-white/20' : 'bg-white/80 border-white/20'}`}
+          className={`backdrop-blur-sm rounded-2xl px-4 py-3 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/80 border-white/20'}`}
           style={({ pressed }) => ({
             opacity: pressed ? 0.8 : 1,
             transform: [{ scale: pressed ? 0.98 : 1 }],
@@ -329,11 +350,11 @@ export default function QuestionBrowsingScreen() {
 
         <View className="items-center flex-1 mx-4">
           <Text className="font-bold text-lg mb-1 text-gray-800 dark:text-white">
-            {deck?.name}
+            {deck?.name || 'Loading...'}
           </Text>
           <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">
             {safeQuestionNumber} of {safeProgressTotal}
-            {hasHitLimit && !isPremium && ` (Free: ${FREE_QUESTIONS_LIMIT}/${allQuestions?.length || 0})`}
+            {(hasHitLimit || false) && !(isPremium || false) ? ` (Free: ${FREE_QUESTIONS_LIMIT || 5}/${allQuestions?.length || 0})` : ''}
           </Text>
         </View>
 
@@ -342,9 +363,9 @@ export default function QuestionBrowsingScreen() {
 
       {/* Progress Bar */}
       <View className="px-6 mb-4">
-        <View className={`backdrop-blur-sm rounded-full h-2 border ${isDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
+        <View className={`backdrop-blur-sm rounded-full h-2 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
           <View
-            className={`rounded-full h-2 transition-all duration-500 ${isDark ? 'bg-white' : 'bg-gray-800'}`}
+            className={`rounded-full h-2 transition-all duration-500 ${safeIsDark ? 'bg-white' : 'bg-gray-800'}`}
             style={{ width: `${(safeQuestionNumber / safeProgressTotal) * 100}%` }}
           />
         </View>
@@ -368,7 +389,7 @@ export default function QuestionBrowsingScreen() {
         <View className="flex-row justify-center items-center space-x-8 mb-6">
           <Pressable
             onPress={handleSkip}
-            className={`backdrop-blur-sm rounded-3xl px-10 py-5 border ${isDark ? 'bg-white/20 border-white/20' : 'bg-white/80 border-white/20'}`}
+            className={`backdrop-blur-sm rounded-3xl px-10 py-5 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/80 border-white/20'}`}
             style={({ pressed }) => ({
               transform: [{ scale: pressed ? 0.95 : 1 }],
               opacity: pressed ? 0.8 : 1,
@@ -384,7 +405,7 @@ export default function QuestionBrowsingScreen() {
 
           <Pressable
             onPress={handleComplete}
-            className={`rounded-3xl px-10 py-5 ${isDark ? 'bg-white' : 'bg-gray-900'}`}
+            className={`rounded-3xl px-10 py-5 ${safeIsDark ? 'bg-white' : 'bg-gray-900'}`}
             style={({ pressed }) => ({
               transform: [{ scale: pressed ? 0.95 : 1 }],
               opacity: pressed ? 0.9 : 1,
@@ -400,7 +421,7 @@ export default function QuestionBrowsingScreen() {
         </View>
 
         {/* Swipe Hint - Elegant design */}
-        <View className={`backdrop-blur-sm rounded-full py-4 px-8 border ${isDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
+        <View className={`backdrop-blur-sm rounded-full py-4 px-8 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
           <Text 
             className="text-center text-base font-medium text-gray-600 dark:text-gray-300"
             style={{ fontWeight: '400' }}

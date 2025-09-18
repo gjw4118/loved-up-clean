@@ -1,7 +1,7 @@
 // Enhanced Glass Card Component
 // Uses HeroUI Card as base with iOS 26 glass effects overlay
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useTheme } from '@/hooks/useTheme';
 import { BlurView } from 'expo-blur'; // Fallback for older iOS versions
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Card } from 'heroui-native';
@@ -43,11 +43,9 @@ export default function GlassCard({
 }: GlassCardProps) {
   // Use native glass effect if available, fallback to BlurView
   const useNativeGlass = isLiquidGlassAvailable();
-  const colorScheme = useColorScheme();
+  const { isDark } = useTheme();
   
-  // Theme-aware styling - force theme detection
-  const theme = colorScheme || 'light';
-  const isDark = theme === 'dark';
+  // Theme-aware styling - use consistent theme detection
   const cardBackground = isDark ? 'bg-white/10' : 'bg-black/10';
   const borderColor = isDark ? 'border-white/20' : 'border-black/20';
 

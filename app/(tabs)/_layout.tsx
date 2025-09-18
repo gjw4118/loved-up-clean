@@ -12,7 +12,7 @@ export default function TabLayout() {
       iconColor={isDark ? "#9CA3AF" : "#6B7280"}
     >
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: 'target', selected: 'target' }} />
+        <Icon sf={{ default: 'target', selected: 'target.fill' }} />
         <Label>Decks</Label>
       </NativeTabs.Trigger>
       

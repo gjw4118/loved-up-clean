@@ -1,17 +1,21 @@
 import { supabase } from '@/lib/database/supabase';
 import {
-    PremiumStatus,
-    RevenueCatCustomer,
-    RevenueCatCustomerInfo
+  PremiumStatus,
+  RevenueCatCustomer,
+  RevenueCatCustomerInfo
 } from '@/types/revenuecat';
 import { useCallback, useEffect, useState } from 'react';
 import Purchases from 'react-native-purchases';
 
 export const usePremiumStatus = (): PremiumStatus => {
   const [isPremium, setIsPremium] = useState(false);
-  const [loading, setLoading] = useState(!!process.env.EXPO_PUBLIC_RC_API_KEY);
+  const [loading, setLoading] = useState(false); // Start with false, will be set to true only if RevenueCat is configured
   const [error, setError] = useState<string | null>(null);
   const [customerInfo, setCustomerInfo] = useState<RevenueCatCustomerInfo | null>(null);
+
+  // Development mode: bypass premium limits
+  const isDevMode = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
+  const bypassPremium = process.env.EXPO_PUBLIC_BYPASS_PREMIUM === 'true';
 
   // Function to synchronize with Supabase
   const syncWithSupabase = useCallback(async (customerInfo: RevenueCatCustomerInfo) => {
@@ -61,8 +65,16 @@ export const usePremiumStatus = (): PremiumStatus => {
     try {
       setError(null);
 
+      // Development mode: bypass premium checks
+      if (isDevMode && bypassPremium) {
+        console.log('🔧 Development mode: Bypassing premium limits');
+        setIsPremium(true);
+        setLoading(false);
+        return;
+      }
+
       // Check if RevenueCat is configured
-      if (!process.env.EXPO_PUBLIC_RC_API_KEY) {
+      if (!process.env.EXPO_PUBLIC_RC_API_KEY || process.env.EXPO_PUBLIC_RC_API_KEY === 'your_revenuecat_api_key_here') {
         console.log('⚠️ RevenueCat not configured, defaulting to free tier');
         setIsPremium(false);
         setLoading(false);
@@ -96,7 +108,7 @@ export const usePremiumStatus = (): PremiumStatus => {
     } finally {
       setLoading(false);
     }
-  }, [syncWithSupabase]);
+  }, [syncWithSupabase, isDevMode, bypassPremium]);
 
   // Function to manually refetch
   const refetch = useCallback(async () => {
@@ -108,7 +120,7 @@ export const usePremiumStatus = (): PremiumStatus => {
     checkPremiumStatus();
 
     // Listen to customerInfo changes (only if RevenueCat is configured)
-    if (process.env.EXPO_PUBLIC_RC_API_KEY) {
+    if (process.env.EXPO_PUBLIC_RC_API_KEY && process.env.EXPO_PUBLIC_RC_API_KEY !== 'your_revenuecat_api_key_here') {
       Purchases.addCustomerInfoUpdateListener((customerInfo) => {
         console.log('🔄 CustomerInfo updated via listener');
         const customerInfoTyped = customerInfo as unknown as RevenueCatCustomerInfo;
