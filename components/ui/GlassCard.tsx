@@ -1,6 +1,7 @@
 // Enhanced Glass Card Component
 // Uses HeroUI Card as base with iOS 26 glass effects overlay
 
+import { useColorScheme } from '@/components/useColorScheme';
 import { BlurView } from 'expo-blur'; // Fallback for older iOS versions
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Card } from 'heroui-native';
@@ -42,6 +43,13 @@ export default function GlassCard({
 }: GlassCardProps) {
   // Use native glass effect if available, fallback to BlurView
   const useNativeGlass = isLiquidGlassAvailable();
+  const colorScheme = useColorScheme();
+  
+  // Theme-aware styling - force theme detection
+  const theme = colorScheme || 'light';
+  const isDark = theme === 'dark';
+  const cardBackground = isDark ? 'bg-white/10' : 'bg-black/10';
+  const borderColor = isDark ? 'border-white/20' : 'border-black/20';
 
   return (
     <View className={`relative ${className}`} style={style}>
@@ -69,15 +77,19 @@ export default function GlassCard({
       
       {/* Glass Border Effect */}
       <View
-        className="absolute inset-0 border border-white/20"
+        className="absolute inset-0 border"
         style={{
           borderRadius: radius === 'xl' ? 16 : radius === 'lg' ? 12 : 8,
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.2)',
         }}
       />
 
       {/* HeroUI Card */}
       <Card
-        className="relative z-10 bg-transparent border-0"
+        className="relative z-10 border-0"
+        style={{
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.1)',
+        }}
         radius={radius}
         shadow={shadow}
         isPressable={isPressable}
@@ -85,17 +97,17 @@ export default function GlassCard({
         onPress={onPress}
       >
         {header && (
-          <Card.Header className="bg-transparent text-foreground">
+          <Card.Header className="bg-transparent">
             {header}
           </Card.Header>
         )}
         
-        <Card.Body className="bg-transparent text-foreground">
+        <Card.Body className="bg-transparent">
           {children}
         </Card.Body>
         
         {footer && (
-          <Card.Footer className="bg-transparent text-foreground">
+          <Card.Footer className="bg-transparent">
             {footer}
           </Card.Footer>
         )}

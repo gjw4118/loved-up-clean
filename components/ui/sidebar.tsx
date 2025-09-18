@@ -140,7 +140,7 @@ export const CustomDrawerContent: React.FC<DrawerContentComponentProps> = (props
                   </Text>
                   {isPremiumItem && hasAccess && (
                     <View className="ml-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-2 py-0.5">
-                      <Text className="text-xs font-semibold text-white">✨</Text>
+                      <Text className="text-xs font-semibold text-white">★</Text>
                     </View>
                   )}
                 </View>

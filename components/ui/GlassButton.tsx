@@ -1,6 +1,7 @@
 // Enhanced Glass Button Component
 // Uses HeroUI Button as base with iOS 26 glass effects overlay
 
+import { useColorScheme } from '@/components/useColorScheme';
 import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';
@@ -39,6 +40,14 @@ export default function GlassButton({
   radius = 'xl',
   color = 'default',
 }: GlassButtonProps) {
+  const colorScheme = useColorScheme();
+  
+  // Theme-aware styling - force theme detection
+  const theme = colorScheme || 'light';
+  const isDark = theme === 'dark';
+  const buttonBackground = isDark ? 'bg-white/10' : 'bg-black/10';
+  const buttonBorder = isDark ? 'border-white/20' : 'border-black/20';
+  
   const handlePress = async () => {
     if (disabled || loading) return;
     
@@ -79,7 +88,11 @@ export default function GlassButton({
         radius={radius}
         startContent={startContent}
         endContent={endContent}
-        className="relative z-10 bg-transparent border-white/20"
+        className="relative z-10 border"
+        style={{
+          backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.1)',
+          borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.2)',
+        }}
       >
         {children}
       </Button>

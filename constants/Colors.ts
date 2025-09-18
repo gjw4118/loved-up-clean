@@ -31,6 +31,20 @@ export const DECK_COLORS = {
     light: '#D6EAF8',
     dark: '#2A7AAF',
   },
+  work: {
+    primary: '#3498DB',    // Blue (same as professional)
+    secondary: '#2980B9',
+    gradient: ['#3498DB', '#2980B9'],
+    light: '#D6EAF8',
+    dark: '#2A7AAF',
+  },
+  lovers: {
+    primary: '#E74C3C',    // Red (same as romantic)
+    secondary: '#C0392B',
+    gradient: ['#E74C3C', '#C0392B'],
+    light: '#FADBD8',
+    dark: '#B93A30',
+  },
 } as const;
 
 // iOS System Colors

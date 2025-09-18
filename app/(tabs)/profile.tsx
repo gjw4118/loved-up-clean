@@ -1,16 +1,21 @@
 // Connect App - Profile Screen
 // Comprehensive glass design with user stats, settings, and interactions
 
-import * as Haptics from 'expo-haptics';
-import { LinearGradient, StatusBar } from '@/components/ui';
-import { GlassButton, GlassCard } from '@/components/ui';
+import { GlassButton, GlassCard, LinearGradient, StatusBar } from '@/components/ui';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useAuth } from '@/lib/auth/AuthContext';
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 export default function ProfileScreen() {
   const { user, profile, signOut } = useAuth();
+  const colorScheme = useColorScheme();
+  
+  // Force theme detection - if colorScheme is null/undefined, default to 'light'
+  const theme = colorScheme || 'light';
+  const isDark = theme === 'dark';
 
   // Mock user stats - will be replaced with real data
   const userStats = {
@@ -36,7 +41,7 @@ export default function ProfileScreen() {
   const handleSettings = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Navigate to settings screen
-    console.log('Settings');
+    router.push('/settings');
   };
 
   const handleShareApp = async () => {
@@ -47,16 +52,19 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
-      {/* Dynamic Gradient Background */}
+      {/* Theme-aware Dynamic Gradient Background */}
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={isDark 
+          ? ['#1a1a2e', '#16213e', '#0f3460'] 
+          : ['#f8fafc', '#e2e8f0', '#cbd5e1']
+        }
         className="absolute inset-0"
       />
       
       {/* Subtle Glass Overlay */}
-      <View className="absolute inset-0 bg-white/5" />
+      <View className={`absolute inset-0 ${isDark ? 'bg-white/5' : 'bg-black/5'}`} />
       
       <ScrollView className="flex-1 px-4 pt-6" showsVerticalScrollIndicator={false}>
         {/* Profile Header with Glass Effect */}
@@ -69,7 +77,7 @@ export default function ProfileScreen() {
           <View className="items-center">
             {/* Avatar */}
             <View className="bg-orange-500/20 rounded-full p-4 mb-4">
-              <Text className="text-4xl">👤</Text>
+              <Text className="text-4xl">U</Text>
             </View>
             
             {/* User Info */}
@@ -101,13 +109,13 @@ export default function ProfileScreen() {
           radius="xl"
         >
           <Text className="text-xl font-bold text-white mb-4">
-            📊 Your Progress
+            Your Progress
           </Text>
           
           <View className="space-y-4">
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Text className="text-2xl mr-3">🎯</Text>
+                <Text className="text-2xl mr-3">T</Text>
                 <View>
                   <Text className="text-white font-medium">Questions Completed</Text>
                   <Text className="text-white/60 text-sm">Keep the conversations flowing</Text>
@@ -120,7 +128,7 @@ export default function ProfileScreen() {
             
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Text className="text-2xl mr-3">❤️</Text>
+                <Text className="text-2xl mr-3">H</Text>
                 <View>
                   <Text className="text-white font-medium">Favorite Questions</Text>
                   <Text className="text-white/60 text-sm">Your saved conversations</Text>
@@ -133,7 +141,7 @@ export default function ProfileScreen() {
             
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Text className="text-2xl mr-3">📚</Text>
+                <Text className="text-2xl mr-3">D</Text>
                 <View>
                   <Text className="text-white font-medium">Decks Completed</Text>
                   <Text className="text-white/60 text-sm">Question categories finished</Text>
@@ -146,7 +154,7 @@ export default function ProfileScreen() {
             
             <View className="flex-row justify-between items-center">
               <View className="flex-row items-center">
-                <Text className="text-2xl mr-3">🔥</Text>
+                <Text className="text-2xl mr-3">S</Text>
                 <View>
                   <Text className="text-white font-medium">Current Streak</Text>
                   <Text className="text-white/60 text-sm">Days in a row</Text>
@@ -176,7 +184,7 @@ export default function ProfileScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center">
-                  <Text className="text-2xl mr-4">⚙️</Text>
+                  <Text className="text-2xl mr-4">S</Text>
                   <View>
                     <Text className="text-white font-medium">Settings</Text>
                     <Text className="text-white/60 text-sm">Preferences and notifications</Text>
@@ -202,7 +210,7 @@ export default function ProfileScreen() {
             >
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center">
-                  <Text className="text-2xl mr-4">📤</Text>
+                  <Text className="text-2xl mr-4">S</Text>
                   <View>
                     <Text className="text-white font-medium">Share Connect</Text>
                     <Text className="text-white/60 text-sm">Invite friends to join</Text>
@@ -238,7 +246,7 @@ export default function ProfileScreen() {
               Connect App v1.0.0
             </Text>
             <Text className="text-white/40 text-xs">
-              Made with ❤️ for meaningful conversations
+              Made with love for meaningful conversations
             </Text>
           </View>
         </GlassCard>

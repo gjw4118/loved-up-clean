@@ -21,11 +21,13 @@
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.2",
+    "@iconify/react": "^6.0.2",
     "@react-native-community/netinfo": "11.4.1",
     "@react-native-google-signin/google-signin": "^16.0.0",
     "@react-navigation/native": "^7.1.8",
     "@supabase/supabase-js": "^2.57.4",
     "@tanstack/react-query": "^5.89.0",
+    "clsx": "^2.1.1",
     "dotenv": "^17.2.2",
     "expo": "~54.0.7",
     "expo-accessibility": "^0.1.1",

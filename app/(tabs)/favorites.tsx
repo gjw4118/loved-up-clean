@@ -1,14 +1,20 @@
 // Connect App - Favorites Screen
 // Beautiful glass design with saved questions and interactions
 
+import { GlassButton, GlassCard, LinearGradient, StatusBar } from '@/components/ui';
+import { useColorScheme } from '@/components/useColorScheme';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient, StatusBar } from '@/components/ui';
-import { GlassCard, GlassButton } from '@/components/ui';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 export default function FavoritesScreen() {
+  const colorScheme = useColorScheme();
+  
+  // Force theme detection - if colorScheme is null/undefined, default to 'light'
+  const theme = colorScheme || 'light';
+  const isDark = theme === 'dark';
+  
   // Mock data for demonstration - will be replaced with real data
   const favoriteQuestions = [
     {
@@ -53,16 +59,19 @@ export default function FavoritesScreen() {
 
   return (
     <SafeAreaView className="flex-1">
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       
-      {/* Dynamic Gradient Background */}
+      {/* Theme-aware Dynamic Gradient Background */}
       <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
+        colors={isDark 
+          ? ['#1a1a2e', '#16213e', '#0f3460'] 
+          : ['#f8fafc', '#e2e8f0', '#cbd5e1']
+        }
         className="absolute inset-0"
       />
       
       {/* Subtle Glass Overlay */}
-      <View className="absolute inset-0 bg-white/5" />
+      <View className={`absolute inset-0 ${isDark ? 'bg-white/5' : 'bg-black/5'}`} />
       
       <ScrollView className="flex-1 px-4 pt-6" showsVerticalScrollIndicator={false}>
         {/* Header with Glass Effect */}
@@ -75,7 +84,7 @@ export default function FavoritesScreen() {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-3xl font-bold text-white mb-1">
-                ❤️ Favorites
+                Favorites
               </Text>
               <Text className="text-white/70">
                 {favoriteQuestions.length} saved questions

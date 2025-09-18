@@ -1,6 +1,6 @@
-import { useMemo, useCallback } from 'react';
-import { useProfileStore } from '@/stores/profileStore';
 import { Profile } from '@/types/profile';
+import { useCallback, useMemo } from 'react';
+import { useProfileStore } from '../stores/profileStore';
 
 export const useProfile = () => {
   const {

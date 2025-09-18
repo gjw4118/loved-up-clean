@@ -1,9 +1,9 @@
-import React, { useRef, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Animated } from 'react-native';
 import { Text } from '@/components/ui/text';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useIconColors } from '@/hooks/useIconColors';
 import { onboardingBenefits, onboardingConfig } from '@/constants/onboarding';
+import { useIconColors } from '@/hooks/useIconColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import React, { useEffect, useRef } from 'react';
+import { Animated, ScrollView, TouchableOpacity, View } from 'react-native';
 
 interface OnboardingStep3Props {
   notificationsEnabled: boolean;
@@ -86,7 +86,7 @@ export function OnboardingStep3({
         {/* Benefits List */}
         <View className="gap-3">
           <Text className="text-lg font-semibold text-foreground mb-2">
-            ✨ {t('onboarding.step3.benefits')}
+            Benefits
           </Text>
           {translatedBenefits.map((benefit, index) => (
             <View key={index} className="flex-row items-start gap-3 p-3 bg-card rounded-lg border border-border">
@@ -108,8 +108,8 @@ export function OnboardingStep3({
           <View className="mt-6 p-4 bg-muted/20 rounded-xl">
             <Text className="text-sm text-muted-foreground text-center">
               {permissionStatus?.status === 'granted' 
-                ? '✅ ' + t('onboarding.step3.permissionGranted')
-                : '📱 ' + t('onboarding.step3.permissionWillRequest')
+                ? '✓ ' + t('onboarding.step3.permissionGranted')
+                : 'N ' + t('onboarding.step3.permissionWillRequest')
               }
             </Text>
           </View>

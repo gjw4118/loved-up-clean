@@ -9,7 +9,7 @@ export const QUESTION_DECKS = [
     name: 'Friends & Social',
     description: 'Questions to deepen friendships and create memorable moments with your social circle',
     category: DeckCategory.FRIENDS,
-    icon: '👥',
+    icon: 'F',
     color: '#FF6B35', // Warm orange
     gradient: ['#FF6B35', '#F7931E'],
     estimatedQuestions: 75,
@@ -29,7 +29,7 @@ export const QUESTION_DECKS = [
     name: 'Love & Romance',
     description: 'Intimate questions for couples to explore deeper connection and understanding',
     category: DeckCategory.ROMANTIC,
-    icon: '💕',
+    icon: 'L',
     color: '#E74C3C', // Red
     gradient: ['#E74C3C', '#C0392B'],
     estimatedQuestions: 70,
@@ -39,7 +39,7 @@ export const QUESTION_DECKS = [
     name: 'Work & Growth',
     description: 'Professional questions for team building, networking, and career conversations',
     category: DeckCategory.PROFESSIONAL,
-    icon: '💼',
+    icon: 'W',
     color: '#3498DB', // Blue
     gradient: ['#3498DB', '#2980B9'],
     estimatedQuestions: 65,
@@ -50,7 +50,7 @@ export const DECK_CATEGORIES = {
   [DeckCategory.FRIENDS]: {
     name: 'Friends & Social',
     description: 'Build stronger friendships',
-    icon: '👥',
+    icon: 'F',
     color: '#FF6B35',
   },
   [DeckCategory.FAMILY]: {
@@ -62,13 +62,13 @@ export const DECK_CATEGORIES = {
   [DeckCategory.ROMANTIC]: {
     name: 'Love & Romance',
     description: 'Deepen romantic connections',
-    icon: '💕',
+    icon: 'L',
     color: '#E74C3C',
   },
   [DeckCategory.PROFESSIONAL]: {
     name: 'Work & Growth',
     description: 'Professional relationships',
-    icon: '💼',
+    icon: 'W',
     color: '#3498DB',
   },
 } as const;

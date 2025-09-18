@@ -1,19 +1,46 @@
 // Connect App Authentication Screen
-// Hybrid UI: HeroUI Native + iOS 26 Glass Components
+// Apple Sign-In only with native iOS design
 
-import { GlassButton, GlassCard, LinearGradient, StatusBar } from '@/components/ui';
-import { isAppleSignInAvailable, signInWithApple, signInWithGoogle } from '@/lib/auth/supabase-auth';
+import { isAppleSignInAvailable, signInWithApple } from '@/lib/auth/supabase-auth';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Dimensions, SafeAreaView, Text, View } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export default function ConnectAuthScreen() {
   const [loading, setLoading] = useState(false);
   const [appleAvailable, setAppleAvailable] = useState(false);
+  
+  // Animation values
+  const fadeAnim = useState(new Animated.Value(0))[0];
+  const slideAnim = useState(new Animated.Value(50))[0];
+  const scaleAnim = useState(new Animated.Value(0.9))[0];
 
   useEffect(() => {
     checkAppleAvailability();
+    
+    // Entrance animation
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
 
   const checkAppleAvailability = async () => {
@@ -24,7 +51,7 @@ export default function ConnectAuthScreen() {
   const handleAppleSignIn = async () => {
     try {
       setLoading(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
       const { data, error } = await signInWithApple();
       
@@ -35,7 +62,7 @@ export default function ConnectAuthScreen() {
 
       if (data?.user) {
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace('/(protected)');
+        router.replace('/(tabs)');
       }
     } catch (error) {
       console.error('Apple Sign-In Error:', error);
@@ -45,113 +72,83 @@ export default function ConnectAuthScreen() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setLoading(true);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      
-      const { data, error } = await signInWithGoogle();
-      
-      if (error) {
-        Alert.alert('Sign In Error', 'Failed to sign in with Google. Please try again.');
-        return;
-      }
-
-      if (data?.user) {
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace('/(protected)');
-      }
-    } catch (error) {
-      console.error('Google Sign-In Error:', error);
-      Alert.alert('Sign In Error', 'An unexpected error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <SafeAreaView className="flex-1">
-      <StatusBar style="light" />
-      
-      {/* iOS 26 Gradient Background */}
+      {/* Background Gradient */}
       <LinearGradient
-        colors={['#FF6B35', '#F7931E', '#FFB347']}
+        colors={['#FF6B35', '#F7931E', '#FFD700']}
         className="absolute inset-0"
       />
       
       {/* Content Container */}
-      <View className="flex-1 justify-center items-center px-8">
-        {/* Brand Section */}
+      <Animated.View 
+        className="flex-1 justify-center items-center px-8"
+        style={{
+          opacity: fadeAnim,
+          transform: [
+            { translateY: slideAnim },
+            { scale: scaleAnim }
+          ],
+        }}
+      >
+        {/* Logo/Brand Section */}
         <View className="items-center mb-16">
-          <Text className="text-7xl mb-6">💬</Text>
-          <Text className="text-5xl font-bold text-white mb-4">Connect</Text>
-          <Text className="text-xl text-white/90 text-center leading-7">
+          <Text className="text-8xl mb-6">💬</Text>
+          <Text className="text-5xl font-bold text-white mb-4 text-center">
+            Connect
+          </Text>
+          <Text className="text-xl text-white/90 text-center leading-7 max-w-sm">
             Meaningful questions to deepen{'\n'}your relationships
           </Text>
         </View>
 
-        {/* iOS 26 Glass Authentication Card */}
-        <GlassCard
-          intensity={25}
-          tint="light"
-          className="w-full"
-          radius="2xl"
-        >
-          <View className="p-6 space-y-4">
-            {/* Apple Sign-In (iOS only) */}
-            {appleAvailable && (
-              <GlassButton
-                onPress={handleAppleSignIn}
-                disabled={loading}
-                loading={loading}
-                intensity={20}
-                tint="dark"
-                size="lg"
-                className="bg-black/10"
-                startContent={
-                  <Text className="text-2xl">🍎</Text>
-                }
-              >
-                <Text className="text-white font-semibold text-lg">
-                  Continue with Apple
-                </Text>
-              </GlassButton>
+        {/* Apple Sign-In Button - Centerpiece */}
+        {appleAvailable ? (
+          <View className="w-full max-w-sm">
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={12}
+              style={{
+                width: '100%',
+                height: 56,
+                marginBottom: 16,
+              }}
+              onPress={handleAppleSignIn}
+            />
+            
+            {loading && (
+              <View className="items-center mt-4">
+                <ActivityIndicator size="small" color="white" />
+                <Text className="text-white/80 text-sm mt-2">Signing in...</Text>
+              </View>
             )}
-
-            {/* Google Sign-In */}
-            <GlassButton
-              onPress={handleGoogleSignIn}
-              disabled={loading}
-              loading={loading}
-              intensity={40}
-              tint="light"
-              size="lg"
-              className="bg-white/20"
-              startContent={
-                <Text className="text-2xl">🔍</Text>
-              }
-            >
-              <Text className="text-gray-800 font-semibold text-lg">
-                Continue with Google
-              </Text>
-            </GlassButton>
-
-            {/* Privacy Notice */}
-            <Text className="text-sm text-white/70 text-center mt-6 leading-5">
-              By continuing, you agree to our Terms of Service and Privacy Policy.
-              Your data is secure and never shared without permission.
+          </View>
+        ) : (
+          <View className="w-full max-w-sm items-center py-8">
+            <Text className="text-white/80 text-center text-lg mb-4">
+              Apple Sign-In is not available on this device
+            </Text>
+            <Text className="text-white/60 text-center text-sm">
+              Please use a device with iOS 13+ or macOS 10.15+
             </Text>
           </View>
-        </GlassCard>
+        )}
+
+        {/* Privacy Notice */}
+        <Text className="text-sm text-white/70 text-center mt-12 max-w-sm leading-5">
+          By continuing, you agree to our Terms of Service and Privacy Policy.
+          Your data is secure and never shared without permission.
+        </Text>
 
         {/* Features Preview */}
-        <View className="mt-12 space-y-4">
-          <FeatureItem icon="🎯" text="4 curated question decks" />
-          <FeatureItem icon="💝" text="Share questions via iMessage" />
-          <FeatureItem icon="📱" text="Beautiful iOS native design" />
+        <View className="mt-16 space-y-4">
+          <FeatureItem icon="💭" text="4 curated question decks" />
+          <FeatureItem icon="📱" text="Share questions via iMessage" />
+          <FeatureItem icon="✨" text="Beautiful iOS native design" />
           <FeatureItem icon="🔒" text="Private & secure conversations" />
         </View>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -161,11 +158,9 @@ interface FeatureItemProps {
   text: string;
 }
 
-function FeatureItem({ icon, text }: FeatureItemProps) {
-  return (
-    <View className="flex-row items-center space-x-3">
-      <Text className="text-2xl">{icon}</Text>
-      <Text className="text-white/90 text-base font-medium">{text}</Text>
-    </View>
-  );
-}
+const FeatureItem: React.FC<FeatureItemProps> = ({ icon, text }) => (
+  <View className="flex-row items-center space-x-4">
+    <Text className="text-2xl">{icon}</Text>
+    <Text className="text-white/90 text-base font-medium flex-1">{text}</Text>
+  </View>
+);

@@ -1,12 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import Purchases, { CustomerInfo } from 'react-native-purchases';
-import { supabase } from '@/config/supabase';
-import { 
-  PremiumStatus, 
-  RevenueCatCustomerInfo, 
-  RevenueCatCustomer, 
-  User 
+import { supabase } from '@/lib/database/supabase';
+import {
+    PremiumStatus,
+    RevenueCatCustomer,
+    RevenueCatCustomerInfo
 } from '@/types/revenuecat';
+import { useCallback, useEffect, useState } from 'react';
+import Purchases from 'react-native-purchases';
 
 export const usePremiumStatus = (): PremiumStatus => {
   const [isPremium, setIsPremium] = useState(false);
@@ -20,7 +19,8 @@ export const usePremiumStatus = (): PremiumStatus => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const hasPro = !!customerInfo.entitlements.active[process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME!];
+      const subscriptionName = process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME || 'pro';
+      const hasPro = !!customerInfo.entitlements.active[subscriptionName];
       const latestExpiration = customerInfo.latestExpirationDate;
 
       // Update users table
@@ -62,20 +62,29 @@ export const usePremiumStatus = (): PremiumStatus => {
       setLoading(true);
       setError(null);
 
+      // Check if RevenueCat is configured
+      if (!process.env.EXPO_PUBLIC_RC_API_KEY) {
+        console.log('⚠️ RevenueCat not configured, defaulting to free tier');
+        setIsPremium(false);
+        setLoading(false);
+        return;
+      }
+
       const customerInfo = await Purchases.getCustomerInfo();
       const customerInfoTyped = customerInfo as unknown as RevenueCatCustomerInfo;
       
       setCustomerInfo(customerInfoTyped);
       
       // Check if user has "Pro" entitlement
-      const hasPro = !!customerInfoTyped.entitlements.active[process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME!];
-              setIsPremium(hasPro);
+      const subscriptionName = process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME || 'pro';
+      const hasPro = !!customerInfoTyped.entitlements.active[subscriptionName];
+      setIsPremium(hasPro);
 
       // Synchronize with Supabase
       await syncWithSupabase(customerInfoTyped);
 
-          console.log('✅ Premium status updated:', { 
-            isPremium: hasPro,
+      console.log('✅ Premium status updated:', { 
+        isPremium: hasPro,
         entitlements: Object.keys(customerInfoTyped.entitlements.active) 
       });
 
@@ -97,18 +106,21 @@ export const usePremiumStatus = (): PremiumStatus => {
   useEffect(() => {
     checkPremiumStatus();
 
-    // Listen to customerInfo changes
-    Purchases.addCustomerInfoUpdateListener((customerInfo) => {
-      console.log('🔄 CustomerInfo updated via listener');
-      const customerInfoTyped = customerInfo as unknown as RevenueCatCustomerInfo;
-      
-      setCustomerInfo(customerInfoTyped);
-      const hasPro = !!customerInfoTyped.entitlements.active[process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME!];
-      setIsPremium(hasPro);
-      
-      // Synchronize with Supabase
-      syncWithSupabase(customerInfoTyped);
-    });
+    // Listen to customerInfo changes (only if RevenueCat is configured)
+    if (process.env.EXPO_PUBLIC_RC_API_KEY) {
+      Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+        console.log('🔄 CustomerInfo updated via listener');
+        const customerInfoTyped = customerInfo as unknown as RevenueCatCustomerInfo;
+        
+        setCustomerInfo(customerInfoTyped);
+        const subscriptionName = process.env.EXPO_PUBLIC_RC_SUBSCRIPTION_NAME || 'pro';
+        const hasPro = !!customerInfoTyped.entitlements.active[subscriptionName];
+        setIsPremium(hasPro);
+        
+        // Synchronize with Supabase
+        syncWithSupabase(customerInfoTyped);
+      });
+    }
 
     // RevenueCat automatically handles listener cleanup
   }, [checkPremiumStatus, syncWithSupabase]);

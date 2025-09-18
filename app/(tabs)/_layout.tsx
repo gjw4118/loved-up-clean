@@ -7,25 +7,14 @@ export default function TabLayout() {
       backgroundColor="rgba(0,0,0,0.8)"
       tintColor="#FF6B35"
       iconColor="#9CA3AF"
-      blurEffect="systemMaterialDark"
     >
       <NativeTabs.Trigger name="index">
-        <Icon sf="house" />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      
-      <NativeTabs.Trigger name="decks">
-        <Icon sf="target" />
+        <Icon sf={{ default: 'target', selected: 'target' }} />
         <Label>Decks</Label>
       </NativeTabs.Trigger>
       
-      <NativeTabs.Trigger name="favorites">
-        <Icon sf="heart" />
-        <Label>Favorites</Label>
-      </NativeTabs.Trigger>
-      
       <NativeTabs.Trigger name="profile">
-        <Icon sf="person" />
+        <Icon sf={{ default: 'person', selected: 'person.fill' }} />
         <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>

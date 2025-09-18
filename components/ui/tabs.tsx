@@ -1,68 +1,87 @@
-import * as TabsPrimitive from '@rn-primitives/tabs';
-import * as React from 'react';
-import { cn } from '../../lib/utils';
-import { TextClassContext } from '../ui/text';
+// Simple Tabs Component - Custom implementation for React Native
+import React, { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 
-const Tabs = TabsPrimitive.Root;
-
-function TabsList({
-  className,
-  ...props
-}: TabsPrimitive.ListProps & {
-  ref?: React.RefObject<TabsPrimitive.ListRef>;
-}) {
-  return (
-    <TabsPrimitive.List
-      className={cn(
-        'native:h-12 bg-muted native:px-1.5 h-10 items-center justify-center rounded-md p-1 web:inline-flex',
-        className
-      )}
-      {...props}
-    />
-  );
+interface TabsProps {
+  defaultValue?: string;
+  className?: string;
+  children: React.ReactNode;
 }
 
-function TabsTrigger({
-  className,
-  ...props
-}: TabsPrimitive.TriggerProps & {
-  ref?: React.RefObject<TabsPrimitive.TriggerRef>;
-}) {
-  const { value } = TabsPrimitive.useRootContext();
-  return (
-    <TextClassContext.Provider
-      value={cn(
-        'text-sm native:text-base font-medium text-muted-foreground web:transition-all',
-        value === props.value && 'text-foreground'
-      )}>
-      <TabsPrimitive.Trigger
-        className={cn(
-          'web:ring-offset-background web:focus-visible:ring-ring inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium shadow-none web:whitespace-nowrap web:transition-all web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-offset-2',
-          props.disabled && 'opacity-50 web:pointer-events-none',
-          props.value === value && 'bg-background shadow-foreground/10 shadow-lg',
-          className
-        )}
-        {...props}
-      />
-    </TextClassContext.Provider>
-  );
+interface TabsListProps {
+  className?: string;
+  children: React.ReactNode;
 }
 
-function TabsContent({
-  className,
-  ...props
-}: TabsPrimitive.ContentProps & {
-  ref?: React.RefObject<TabsPrimitive.ContentRef>;
-}) {
-  return (
-    <TabsPrimitive.Content
-      className={cn(
-        'web:ring-offset-background web:focus-visible:ring-ring web:focus-visible:outline-none web:focus-visible:ring-2 web:focus-visible:ring-offset-2',
-        className
-      )}
-      {...props}
-    />
-  );
+interface TabsTriggerProps {
+  value: string;
+  className?: string;
+  children: React.ReactNode;
 }
+
+interface TabsContentProps {
+  value: string;
+  className?: string;
+  children: React.ReactNode;
+}
+
+const TabsContext = React.createContext<{
+  activeTab: string;
+  setActiveTab: (value: string) => void;
+}>({
+  activeTab: '',
+  setActiveTab: () => {},
+});
+
+const Tabs = ({ defaultValue = '', className = '', children }: TabsProps) => {
+  const [activeTab, setActiveTab] = useState(defaultValue);
+
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <View className={`w-full ${className}`}>
+        {children}
+      </View>
+    </TabsContext.Provider>
+  );
+};
+
+const TabsList = ({ className = '', children }: TabsListProps) => {
+  return (
+    <View className={`flex-row bg-white/10 rounded-lg p-1 ${className}`}>
+      {children}
+    </View>
+  );
+};
+
+const TabsTrigger = ({ value, className = '', children }: TabsTriggerProps) => {
+  const { activeTab, setActiveTab } = React.useContext(TabsContext);
+
+  const isActive = activeTab === value;
+
+  return (
+    <Pressable
+      onPress={() => setActiveTab(value)}
+      className={`flex-1 py-2 px-3 rounded-md ${isActive ? 'bg-white/20' : ''} ${className}`}
+    >
+      <Text className={`text-center font-medium ${isActive ? 'text-white' : 'text-white/70'}`}>
+        {children}
+      </Text>
+    </Pressable>
+  );
+};
+
+const TabsContent = ({ value, className = '', children }: TabsContentProps) => {
+  const { activeTab } = React.useContext(TabsContext);
+
+  if (activeTab !== value) {
+    return null;
+  }
+
+  return (
+    <View className={`mt-4 ${className}`}>
+      {children}
+    </View>
+  );
+};
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

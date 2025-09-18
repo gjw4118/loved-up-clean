@@ -1,26 +1,9 @@
 // Supabase Authentication Configuration
-// Based on PRD requirements for Apple and Google sign-in
+// Apple Sign-In only implementation
 
 import { supabase } from '@/lib/database/supabase';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Crypto from 'expo-crypto';
-
-// Configure Google Sign-In
-export const configureGoogleSignIn = () => {
-  const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
-  const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
-  
-  if (!webClientId || !iosClientId) {
-    console.warn('Google Sign-In not configured: Missing environment variables');
-    return;
-  }
-  
-  GoogleSignin.configure({
-    webClientId,
-    iosClientId,
-  });
-};
 
 // Apple Sign-In
 export const signInWithApple = async () => {
@@ -77,58 +60,9 @@ export const signInWithApple = async () => {
   }
 };
 
-// Google Sign-In
-export const signInWithGoogle = async () => {
-  try {
-    // Check if Google Sign-In is configured
-    if (!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || !process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID) {
-      throw new Error('Google Sign-In not configured');
-    }
-    
-    await GoogleSignin.hasPlayServices();
-    const userInfo = await GoogleSignin.signIn();
-
-    if (!userInfo.data?.idToken) {
-      throw new Error('No ID token received from Google');
-    }
-
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
-      token: userInfo.data.idToken,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    // Update user profile with Google data
-    if (data.user && userInfo.data.user) {
-      await supabase
-        .from('user_profiles')
-        .upsert({
-          id: data.user.id,
-          display_name: userInfo.data.user.name || '',
-          email: data.user.email!,
-          avatar_url: userInfo.data.user.photo || null,
-        });
-    }
-
-    return { data, error: null };
-  } catch (error) {
-    console.error('Google Sign-In Error:', error);
-    return { data: null, error };
-  }
-};
-
 // Sign Out
 export const signOut = async () => {
   try {
-    // Sign out from Google if signed in
-    const isGoogleSignedIn = await GoogleSignin.isSignedIn();
-    if (isGoogleSignedIn) {
-      await GoogleSignin.signOut();
-    }
-
     // Sign out from Supabase
     const { error } = await supabase.auth.signOut();
     

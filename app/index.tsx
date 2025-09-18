@@ -1,4 +1,4 @@
-// Connect App - Main Router
+// GoDeeper App - Main Router
 // Handles authentication flow and routing
 
 import { StatusBar } from '@/components/ui';
@@ -13,20 +13,15 @@ export default function IndexScreen() {
   useEffect(() => {
     console.log('IndexScreen: Auth state changed', { user: !!user, loading });
     
-    // TEMPORARY BYPASS: Skip authentication for testing
-    console.log('IndexScreen: BYPASSING AUTH - navigating directly to tabs');
-    router.replace('/(tabs)');
-    
-    // Original auth logic (commented out for testing)
-    // if (!loading) {
-    //   if (user) {
-    //     console.log('IndexScreen: User authenticated, navigating to tabs');
-    //     router.replace('/(tabs)');
-    //   } else {
-    //     console.log('IndexScreen: User not authenticated, navigating to auth');
-    //     router.replace('/auth');
-    //   }
-    // }
+    if (!loading) {
+      if (user) {
+        console.log('IndexScreen: User authenticated, navigating to tabs');
+        router.replace('/(tabs)');
+      } else {
+        console.log('IndexScreen: User not authenticated, navigating to auth');
+        router.replace('/auth');
+      }
+    }
   }, [user, loading]);
 
   // Show loading spinner while checking auth state

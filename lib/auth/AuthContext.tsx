@@ -1,11 +1,10 @@
 // Authentication Context for Connect App
 // Based on PRD requirements
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/database/supabase';
-import { configureGoogleSignIn } from './supabase-auth';
 import { UserProfile } from '@/types/user';
+import { User } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
   user: User | null;
@@ -76,9 +75,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Configure Google Sign-In on app start
-    configureGoogleSignIn();
-
     // Get initial session
     const getInitialSession = async () => {
       try {
