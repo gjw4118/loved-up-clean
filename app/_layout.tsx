@@ -92,44 +92,6 @@ function RootLayoutNav() {
           <HeroUINativeProvider
             config={{
               colorScheme: isDark ? 'dark' : 'light',
-              theme: {
-                colors: {
-                  primary: {
-                    50: '#fff7ed',
-                    100: '#ffedd5',
-                    200: '#fed7aa',
-                    300: '#fdba74',
-                    400: '#fb923c',
-                    500: '#f97316', // Main orange
-                    600: '#ea580c',
-                    700: '#c2410c',
-                    800: '#9a3412',
-                    900: '#7c2d12',
-                    DEFAULT: '#f97316',
-                    foreground: '#ffffff',
-                  },
-                  content1: isDark ? '#1a1a1a' : '#ffffff',
-                  content2: isDark ? '#2a2a2a' : '#f4f4f5',
-                  content3: isDark ? '#3a3a3a' : '#e4e4e7',
-                  content4: isDark ? '#4a4a4a' : '#d4d4d8',
-                  background: isDark ? '#000000' : '#ffffff',
-                  foreground: isDark ? '#ffffff' : '#000000',
-                  default: {
-                    50: '#fafafa',
-                    100: '#f4f4f5',
-                    200: '#e4e4e7',
-                    300: '#d4d4d8',
-                    400: '#a1a1aa',
-                    500: '#71717a',
-                    600: '#52525b',
-                    700: '#3f3f46',
-                    800: '#27272a',
-                    900: '#18181b',
-                    DEFAULT: '#71717a',
-                    foreground: isDark ? '#ffffff' : '#000000',
-                  },
-                },
-              },
             }}
           >
             <AuthProvider>

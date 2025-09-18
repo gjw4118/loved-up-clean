@@ -1,4 +1,4 @@
-// Settings Layout - Tabbed interface for all settings sections
+// Settings Tab - Tabbed interface for all settings sections
 // Adapted from HEROUI PRO template for React Native with glass morphism design
 
 import AccountSettings from '@/components/settings/AccountSettings';
@@ -9,17 +9,11 @@ import ProfileSettings from '@/components/settings/ProfileSettings';
 import { LinearGradient, StatusBar } from '@/components/ui';
 import { Tabs } from '@/components/ui/tabs';
 import { useTheme } from '@/hooks/useTheme';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import React from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 
-export default function SettingsLayout() {
+export default function SettingsTab() {
   const { theme, isDark } = useTheme();
-
-  const handleBack = () => {
-    router.back();
-  };
 
   return (
     <SafeAreaView className="flex-1">
@@ -40,22 +34,10 @@ export default function SettingsLayout() {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View className="px-4 pt-6 pb-4">
-          <View className="flex-row items-center mb-4">
-            <Pressable 
-              onPress={handleBack}
-              className="mr-4 p-2"
-            >
-              <Ionicons 
-                name="arrow-back" 
-                size={24} 
-                color={isDark ? '#ffffff' : '#000000'} 
-              />
-            </Pressable>
-            <Text className="text-3xl font-bold text-white">
-              Settings
-            </Text>
-          </View>
-          <Text className="text-white/70 text-base ml-12">
+          <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Settings
+          </Text>
+          <Text className="text-gray-600 dark:text-white/70 text-base">
             Customize your Connect experience
           </Text>
         </View>

@@ -1,49 +1,49 @@
 // Connect App - Design System Colors
 // Based on PRD requirements and iOS 26 design guidelines
 
-// Deck Category Colors (Primary Brand Colors)
+// Deck Category Colors (Primary Brand Colors) - Updated Color Scheme
 export const DECK_COLORS = {
   friends: {
-    primary: '#FF6B35',    // Warm Orange
-    secondary: '#F7931E',
-    gradient: ['#FF6B35', '#F7931E'],
-    light: '#FFE5D9',
-    dark: '#CC5429',
+    primary: '#2196F3',    // Vibrant Blue
+    secondary: '#42A5F5',  // Bright Blue
+    gradient: ['#2196F3', '#42A5F5', '#64B5F6'],
+    light: '#E3F2FD',
+    dark: '#1565C0',
   },
   family: {
-    primary: '#4ECDC4',    // Teal
-    secondary: '#44A08D', 
-    gradient: ['#4ECDC4', '#44A08D'],
-    light: '#E0F7F5',
-    dark: '#3EA39D',
+    primary: '#4CAF50',    // Vibrant Green
+    secondary: '#66BB6A',  // Bright Green
+    gradient: ['#4CAF50', '#66BB6A', '#81C784'],
+    light: '#E8F5E8',
+    dark: '#388E3C',
   },
   romantic: {
-    primary: '#E74C3C',    // Red
-    secondary: '#C0392B',
-    gradient: ['#E74C3C', '#C0392B'],
-    light: '#FADBD8',
-    dark: '#B93A30',
+    primary: '#E91E63',    // Vibrant Pink
+    secondary: '#F06292',  // Bright Pink
+    gradient: ['#E91E63', '#F06292', '#F48FB1'],
+    light: '#FCE4EC',
+    dark: '#AD1457',
   },
   professional: {
-    primary: '#3498DB',    // Blue
-    secondary: '#2980B9',
-    gradient: ['#3498DB', '#2980B9'],
-    light: '#D6EAF8',
-    dark: '#2A7AAF',
+    primary: '#2196F3',    // Vibrant Blue
+    secondary: '#42A5F5',  // Bright Blue
+    gradient: ['#2196F3', '#42A5F5', '#64B5F6'],
+    light: '#E3F2FD',
+    dark: '#1565C0',
   },
   work: {
-    primary: '#3498DB',    // Blue (same as professional)
-    secondary: '#2980B9',
-    gradient: ['#3498DB', '#2980B9'],
-    light: '#D6EAF8',
-    dark: '#2A7AAF',
+    primary: '#9C27B0',    // Vibrant Purple
+    secondary: '#BA68C8',  // Bright Purple
+    gradient: ['#9C27B0', '#BA68C8', '#CE93D8'],
+    light: '#F3E5F5',
+    dark: '#7B1FA2',
   },
   lovers: {
-    primary: '#E74C3C',    // Red (same as romantic)
-    secondary: '#C0392B',
-    gradient: ['#E74C3C', '#C0392B'],
-    light: '#FADBD8',
-    dark: '#B93A30',
+    primary: '#F44336',    // Vibrant Red
+    secondary: '#EF5350',  // Bright Red
+    gradient: ['#F44336', '#EF5350', '#E57373'],
+    light: '#FFEBEE',
+    dark: '#D32F2F',
   },
 } as const;
 

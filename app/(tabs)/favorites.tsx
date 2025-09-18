@@ -2,18 +2,14 @@
 // Beautiful glass design with saved questions and interactions
 
 import { GlassButton, GlassCard, LinearGradient, StatusBar } from '@/components/ui';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useTheme } from '@/hooks/useTheme';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 export default function FavoritesScreen() {
-  const colorScheme = useColorScheme();
-  
-  // Force theme detection - if colorScheme is null/undefined, default to 'light'
-  const theme = colorScheme || 'light';
-  const isDark = theme === 'dark';
+  const { theme, isDark } = useTheme();
   
   // Mock data for demonstration - will be replaced with real data
   const favoriteQuestions = [

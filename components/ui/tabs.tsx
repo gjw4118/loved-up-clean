@@ -45,6 +45,8 @@ const Tabs = ({ defaultValue = '', className = '', children }: TabsProps) => {
   );
 };
 
+Tabs.displayName = 'Tabs';
+
 const TabsList = ({ className = '', children }: TabsListProps) => {
   return (
     <View className={`flex-row bg-white/10 rounded-lg p-1 ${className}`}>
@@ -52,6 +54,8 @@ const TabsList = ({ className = '', children }: TabsListProps) => {
     </View>
   );
 };
+
+TabsList.displayName = 'TabsList';
 
 const TabsTrigger = ({ value, className = '', children }: TabsTriggerProps) => {
   const { activeTab, setActiveTab } = React.useContext(TabsContext);
@@ -70,6 +74,8 @@ const TabsTrigger = ({ value, className = '', children }: TabsTriggerProps) => {
   );
 };
 
+TabsTrigger.displayName = 'TabsTrigger';
+
 const TabsContent = ({ value, className = '', children }: TabsContentProps) => {
   const { activeTab } = React.useContext(TabsContext);
 
@@ -83,5 +89,12 @@ const TabsContent = ({ value, className = '', children }: TabsContentProps) => {
     </View>
   );
 };
+
+TabsContent.displayName = 'TabsContent';
+
+// Attach sub-components to the main Tabs component
+Tabs.List = TabsList;
+Tabs.Trigger = TabsTrigger;
+Tabs.Content = TabsContent;
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };

@@ -9,7 +9,7 @@ import Purchases from 'react-native-purchases';
 
 export const usePremiumStatus = (): PremiumStatus => {
   const [isPremium, setIsPremium] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!!process.env.EXPO_PUBLIC_RC_API_KEY);
   const [error, setError] = useState<string | null>(null);
   const [customerInfo, setCustomerInfo] = useState<RevenueCatCustomerInfo | null>(null);
 
@@ -59,7 +59,6 @@ export const usePremiumStatus = (): PremiumStatus => {
   // Function to check premium status
   const checkPremiumStatus = useCallback(async () => {
     try {
-      setLoading(true);
       setError(null);
 
       // Check if RevenueCat is configured
@@ -69,6 +68,8 @@ export const usePremiumStatus = (): PremiumStatus => {
         setLoading(false);
         return;
       }
+
+      setLoading(true);
 
       const customerInfo = await Purchases.getCustomerInfo();
       const customerInfoTyped = customerInfo as unknown as RevenueCatCustomerInfo;

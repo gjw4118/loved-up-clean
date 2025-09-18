@@ -1,19 +1,19 @@
 // Appearance Settings Tab Component - Simplified version
 import { GlassButton, GlassCard } from '@/components/ui';
-import { useColorScheme } from '@/components/useColorScheme';
 import { useProfile } from '@/hooks/useProfile';
+import { useTheme } from '@/hooks/useTheme';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Switch } from 'heroui-native';
 import React, { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 
 interface AppearanceSettingsProps {
   className?: string;
 }
 
 export default function AppearanceSettings({ className }: AppearanceSettingsProps) {
-  const colorScheme = useColorScheme();
+  const { theme, isDark, themeMode, setMode } = useTheme();
   const { updateProfile } = useProfile();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -56,24 +56,66 @@ export default function AppearanceSettings({ className }: AppearanceSettingsProp
       >
         <Text className="text-white font-medium text-base mb-2">Theme</Text>
         <Text className="text-white/70 text-sm mb-4">
-          Current theme: {colorScheme || 'auto'}
+          Current theme: {themeMode === 'system' ? 'System' : theme}
         </Text>
         
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center">
-            <Ionicons 
-              name={colorScheme === 'dark' ? 'moon' : 'sunny'} 
-              size={20} 
-              color="white" 
-              className="mr-3"
-            />
-            <Text className="text-white font-medium">
-              {colorScheme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-            </Text>
-          </View>
-          <Text className="text-white/60 text-sm">
-            Auto
-          </Text>
+        <View className="space-y-3">
+          {/* Light Mode */}
+          <Pressable 
+            onPress={() => setMode('light')}
+            className={`flex-row items-center justify-between p-3 rounded-lg ${themeMode === 'light' ? 'bg-white/20' : 'bg-transparent'}`}
+          >
+            <View className="flex-row items-center">
+              <Ionicons 
+                name="sunny" 
+                size={20} 
+                color="white" 
+                className="mr-3"
+              />
+              <Text className="text-white font-medium">Light Mode</Text>
+            </View>
+            {themeMode === 'light' && (
+              <Ionicons name="checkmark" size={20} color="white" />
+            )}
+          </Pressable>
+
+          {/* Dark Mode */}
+          <Pressable 
+            onPress={() => setMode('dark')}
+            className={`flex-row items-center justify-between p-3 rounded-lg ${themeMode === 'dark' ? 'bg-white/20' : 'bg-transparent'}`}
+          >
+            <View className="flex-row items-center">
+              <Ionicons 
+                name="moon" 
+                size={20} 
+                color="white" 
+                className="mr-3"
+              />
+              <Text className="text-white font-medium">Dark Mode</Text>
+            </View>
+            {themeMode === 'dark' && (
+              <Ionicons name="checkmark" size={20} color="white" />
+            )}
+          </Pressable>
+
+          {/* System Mode */}
+          <Pressable 
+            onPress={() => setMode('system')}
+            className={`flex-row items-center justify-between p-3 rounded-lg ${themeMode === 'system' ? 'bg-white/20' : 'bg-transparent'}`}
+          >
+            <View className="flex-row items-center">
+              <Ionicons 
+                name="phone-portrait" 
+                size={20} 
+                color="white" 
+                className="mr-3"
+              />
+              <Text className="text-white font-medium">System</Text>
+            </View>
+            {themeMode === 'system' && (
+              <Ionicons name="checkmark" size={20} color="white" />
+            )}
+          </Pressable>
         </View>
       </GlassCard>
 

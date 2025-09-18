@@ -7,15 +7,38 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Dimensions, Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { StatusBar } from '@/components/ui';
 import { getDeckColor } from '@/constants/Colors';
 import { HARDCODED_DECKS } from '@/constants/hardcodedQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useTheme } from '@/hooks/useTheme';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.45; // 45% of screen width for each card
-const CARD_HEIGHT = width * 0.45; // Square cards
+const { width, height } = Dimensions.get('window');
+
+// Dynamic card sizing based on screen dimensions
+const calculateCardDimensions = () => {
+  const horizontalPadding = 32; // 16px padding on each side
+  const cardSpacing = 16; // Space between cards
+  const availableWidth = width - horizontalPadding - cardSpacing;
+  const cardWidth = availableWidth / 2;
+  
+  // Calculate available height for cards
+  const headerHeight = 120; // Approximate header height
+  const premiumCTAHeight = 100; // Approximate premium CTA height
+  const tabBarHeight = 100; // Approximate tab bar height
+  const breathingRoom = 40; // Extra breathing room
+  const availableHeight = height - headerHeight - premiumCTAHeight - tabBarHeight - breathingRoom;
+  
+  // Make cards square but ensure they fit
+  const cardHeight = Math.min(cardWidth, availableHeight / 2 - 20); // 20px for row spacing
+  
+  return {
+    cardWidth: Math.max(cardWidth, 140), // Minimum width
+    cardHeight: Math.max(cardHeight, 140), // Minimum height
+    cardSpacing: cardSpacing,
+  };
+};
 
 // Icon mapping for decks
 const DECK_ICONS = {
@@ -30,13 +53,12 @@ const DECK_ICONS = {
 
 export default function MainDecksScreen() {
   const decks = HARDCODED_DECKS;
-  const colorScheme = useColorScheme();
+  const { theme, isDark } = useTheme();
   const { isPremium } = usePremiumStatus();
   const { isPresenting, presentPaywall } = usePaywall();
   
-  // Force theme detection - if colorScheme is null/undefined, default to 'light'
-  const theme = colorScheme || 'light';
-  const isDark = theme === 'dark';
+  // Calculate dynamic card dimensions
+  const { cardWidth, cardHeight, cardSpacing } = calculateCardDimensions();
 
   const handleDeckSelect = async (deckId: string, deckName: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -53,11 +75,20 @@ export default function MainDecksScreen() {
 
   return (
     <SafeAreaView className="flex-1">
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <LinearGradient
-        colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0']}
-        className="absolute inset-0"
+        colors={isDark ? ['#1a1a1a', '#2d2d2d'] : ['#f8fafc', '#e2e8f0', '#cbd5e1']}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
-      <ScrollView className="flex-1 px-4 pt-6">
+      <ScrollView 
+        className="flex-1" 
+        contentContainerStyle={{ 
+          paddingHorizontal: 16, 
+          paddingTop: 24,
+          paddingBottom: 40, // Breathing room above tab bar
+        }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View className="mb-8">
           <Text className="text-4xl font-bold mb-2 text-gray-900 dark:text-white">
@@ -123,9 +154,15 @@ export default function MainDecksScreen() {
 
         {/* Deck Cards - 2x2 Grid */}
         {decks && decks.length > 0 && (
-          <View className="pb-8">
+          <View>
             {/* Row 1 */}
-            <View className="flex-row justify-between mb-6" style={{ width: '100%' }}>
+            <View 
+              className="flex-row justify-between mb-4" 
+              style={{ 
+                width: '100%',
+                gap: cardSpacing,
+              }}
+            >
               {decks.slice(0, 2).map((deck) => {
                 const isSpiceDeck = deck.category === 'spice';
                 const freeQuestions = isSpiceDeck ? 0 : 5;
@@ -135,12 +172,12 @@ export default function MainDecksScreen() {
                 const deckIcon = DECK_ICONS[deck.category as keyof typeof DECK_ICONS] || '📚';
                 
                 return (
-                  <View key={deck.id} style={{ width: '48%' }}>
+                  <View key={deck.id} style={{ flex: 1 }}>
                     <Pressable
                       onPress={() => handleDeckSelect(deck.id, deck.name)}
                       style={({ pressed }) => ({
-                        width: '100%',
-                        aspectRatio: 1,
+                        width: cardWidth,
+                        height: cardHeight,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 12 },
                         shadowOpacity: pressed ? 0.15 : 0.25,
@@ -151,27 +188,46 @@ export default function MainDecksScreen() {
                       })}
                       className="rounded-3xl overflow-hidden"
                     >
-                      {/* Beautiful Subtle Colored Background */}
-                      <View 
-                        className="absolute inset-0 rounded-3xl"
+                      {/* Enhanced Colored Background with Gradient */}
+                      <LinearGradient
+                        colors={isDark 
+                          ? [`${deckColors.primary}30`, `${deckColors.secondary}20`]
+                          : [`${deckColors.primary}25`, `${deckColors.secondary}15`]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={{
-                          backgroundColor: `${deckColors.primary}35`,
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          borderRadius: 24,
                         }}
                       />
                       
-                      {/* Light overlay for readability */}
+                      {/* Enhanced overlay for readability */}
                       <View 
                         className="absolute inset-0 rounded-3xl"
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                          backgroundColor: isDark 
+                            ? 'rgba(255, 255, 255, 0.08)' 
+                            : 'rgba(255, 255, 255, 0.4)',
                         }}
                       />
                       
-                      {/* Subtle accent border */}
+                      {/* Enhanced accent border with glow effect */}
                       <View 
                         className="absolute inset-0 rounded-3xl border-2"
                         style={{
-                          borderColor: `${deckColors.primary}40`,
+                          borderColor: isDark 
+                            ? `${deckColors.primary}70` 
+                            : `${deckColors.primary}50`,
+                          shadowColor: deckColors.primary,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 8,
+                          elevation: 8,
                         }}
                       />
 
@@ -179,12 +235,34 @@ export default function MainDecksScreen() {
                         <View>
                           <View className="items-center mb-4">
                             <View 
-                              className="w-16 h-16 rounded-full items-center justify-center"
-                              style={{ backgroundColor: `${deckColors.primary}20` }}
+                              className="w-20 h-20 rounded-full items-center justify-center"
+                              style={{ 
+                                backgroundColor: isDark 
+                                  ? `${deckColors.primary}50` 
+                                  : `${deckColors.primary}30`,
+                                shadowColor: deckColors.primary,
+                                shadowOffset: { width: 0, height: 6 },
+                                shadowOpacity: 0.4,
+                                shadowRadius: 12,
+                                elevation: 8,
+                                borderWidth: 2,
+                                borderColor: isDark 
+                                  ? `${deckColors.primary}60` 
+                                  : `${deckColors.primary}40`,
+                              }}
                             >
                               <Text 
-                                className="text-2xl font-bold"
-                                style={{ color: deckColors.primary }}
+                                className="text-3xl font-bold"
+                                style={{ 
+                                  color: isDark 
+                                    ? '#ffffff' 
+                                    : deckColors.primary,
+                                  textShadowColor: isDark 
+                                    ? 'rgba(0, 0, 0, 0.4)' 
+                                    : 'rgba(255, 255, 255, 0.9)',
+                                  textShadowOffset: { width: 0, height: 2 },
+                                  textShadowRadius: 4,
+                                }}
                               >
                                 {deckIcon}
                               </Text>
@@ -210,12 +288,38 @@ export default function MainDecksScreen() {
                           </View>
                         )}
                         
-                        {/* Action Icon */}
-                        <View className="items-center justify-center bg-white/80 rounded-full w-12 h-12 self-center">
+                        {/* Enhanced Action Icon */}
+                        <View 
+                          className="items-center justify-center rounded-full w-12 h-12 self-center"
+                          style={{
+                            backgroundColor: isDark 
+                              ? 'rgba(255, 255, 255, 0.25)' 
+                              : 'rgba(255, 255, 255, 0.9)',
+                            shadowColor: deckColors.primary,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4,
+                            elevation: 4,
+                            borderWidth: 1,
+                            borderColor: isDark 
+                              ? `${deckColors.primary}30` 
+                              : `${deckColors.primary}20`,
+                          }}
+                        >
                           {isSpiceDeck && !userHasPremium ? (
-                            <Text className="text-lg font-bold text-gray-500">LOCK</Text>
+                            <Text className="text-lg font-bold text-gray-500 dark:text-gray-300">LOCK</Text>
                           ) : (
-                            <Text className="text-xl text-gray-700">→</Text>
+                            <Text 
+                              className="text-xl"
+                              style={{ 
+                                color: isDark 
+                                  ? deckColors.primary 
+                                  : deckColors.primary,
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              →
+                            </Text>
                           )}
                         </View>
                       </View>
@@ -226,7 +330,13 @@ export default function MainDecksScreen() {
             </View>
             
             {/* Row 2 */}
-            <View className="flex-row justify-between" style={{ width: '100%' }}>
+            <View 
+              className="flex-row justify-between" 
+              style={{ 
+                width: '100%',
+                gap: cardSpacing,
+              }}
+            >
               {decks.slice(2, 4).map((deck) => {
                 const isSpiceDeck = deck.category === 'spice';
                 const freeQuestions = isSpiceDeck ? 0 : 5;
@@ -236,12 +346,12 @@ export default function MainDecksScreen() {
                 const deckIcon = DECK_ICONS[deck.category as keyof typeof DECK_ICONS] || '📚';
                 
                 return (
-                  <View key={deck.id} style={{ width: '48%' }}>
+                  <View key={deck.id} style={{ flex: 1 }}>
                     <Pressable
                       onPress={() => handleDeckSelect(deck.id, deck.name)}
                       style={({ pressed }) => ({
-                        width: '100%',
-                        aspectRatio: 1,
+                        width: cardWidth,
+                        height: cardHeight,
                         shadowColor: '#000',
                         shadowOffset: { width: 0, height: 12 },
                         shadowOpacity: pressed ? 0.15 : 0.25,
@@ -252,27 +362,46 @@ export default function MainDecksScreen() {
                       })}
                       className="rounded-3xl overflow-hidden"
                     >
-                      {/* Beautiful Subtle Colored Background */}
-                      <View 
-                        className="absolute inset-0 rounded-3xl"
+                      {/* Enhanced Colored Background with Gradient */}
+                      <LinearGradient
+                        colors={isDark 
+                          ? [`${deckColors.primary}30`, `${deckColors.secondary}20`]
+                          : [`${deckColors.primary}25`, `${deckColors.secondary}15`]
+                        }
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={{
-                          backgroundColor: `${deckColors.primary}35`,
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          borderRadius: 24,
                         }}
                       />
                       
-                      {/* Light overlay for readability */}
+                      {/* Enhanced overlay for readability */}
                       <View 
                         className="absolute inset-0 rounded-3xl"
                         style={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.6)',
+                          backgroundColor: isDark 
+                            ? 'rgba(255, 255, 255, 0.08)' 
+                            : 'rgba(255, 255, 255, 0.4)',
                         }}
                       />
                       
-                      {/* Subtle accent border */}
+                      {/* Enhanced accent border with glow effect */}
                       <View 
                         className="absolute inset-0 rounded-3xl border-2"
                         style={{
-                          borderColor: `${deckColors.primary}40`,
+                          borderColor: isDark 
+                            ? `${deckColors.primary}70` 
+                            : `${deckColors.primary}50`,
+                          shadowColor: deckColors.primary,
+                          shadowOffset: { width: 0, height: 0 },
+                          shadowOpacity: 0.3,
+                          shadowRadius: 8,
+                          elevation: 8,
                         }}
                       />
 
@@ -280,12 +409,34 @@ export default function MainDecksScreen() {
                         <View>
                           <View className="items-center mb-4">
                             <View 
-                              className="w-16 h-16 rounded-full items-center justify-center"
-                              style={{ backgroundColor: `${deckColors.primary}20` }}
+                              className="w-20 h-20 rounded-full items-center justify-center"
+                              style={{ 
+                                backgroundColor: isDark 
+                                  ? `${deckColors.primary}50` 
+                                  : `${deckColors.primary}30`,
+                                shadowColor: deckColors.primary,
+                                shadowOffset: { width: 0, height: 6 },
+                                shadowOpacity: 0.4,
+                                shadowRadius: 12,
+                                elevation: 8,
+                                borderWidth: 2,
+                                borderColor: isDark 
+                                  ? `${deckColors.primary}60` 
+                                  : `${deckColors.primary}40`,
+                              }}
                             >
                               <Text 
-                                className="text-2xl font-bold"
-                                style={{ color: deckColors.primary }}
+                                className="text-3xl font-bold"
+                                style={{ 
+                                  color: isDark 
+                                    ? '#ffffff' 
+                                    : deckColors.primary,
+                                  textShadowColor: isDark 
+                                    ? 'rgba(0, 0, 0, 0.4)' 
+                                    : 'rgba(255, 255, 255, 0.9)',
+                                  textShadowOffset: { width: 0, height: 2 },
+                                  textShadowRadius: 4,
+                                }}
                               >
                                 {deckIcon}
                               </Text>
@@ -311,12 +462,38 @@ export default function MainDecksScreen() {
                           </View>
                         )}
                         
-                        {/* Action Icon */}
-                        <View className="items-center justify-center bg-white/80 rounded-full w-12 h-12 self-center">
+                        {/* Enhanced Action Icon */}
+                        <View 
+                          className="items-center justify-center rounded-full w-12 h-12 self-center"
+                          style={{
+                            backgroundColor: isDark 
+                              ? 'rgba(255, 255, 255, 0.25)' 
+                              : 'rgba(255, 255, 255, 0.9)',
+                            shadowColor: deckColors.primary,
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 4,
+                            elevation: 4,
+                            borderWidth: 1,
+                            borderColor: isDark 
+                              ? `${deckColors.primary}30` 
+                              : `${deckColors.primary}20`,
+                          }}
+                        >
                           {isSpiceDeck && !userHasPremium ? (
-                            <Text className="text-lg font-bold text-gray-500">LOCK</Text>
+                            <Text className="text-lg font-bold text-gray-500 dark:text-gray-300">LOCK</Text>
                           ) : (
-                            <Text className="text-xl text-gray-700">→</Text>
+                            <Text 
+                              className="text-xl"
+                              style={{ 
+                                color: isDark 
+                                  ? deckColors.primary 
+                                  : deckColors.primary,
+                                fontWeight: 'bold',
+                              }}
+                            >
+                              →
+                            </Text>
                           )}
                         </View>
                       </View>

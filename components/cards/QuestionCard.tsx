@@ -2,6 +2,7 @@
 // Beautiful, focused single question card with premium typography and smooth interactions
 
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback } from 'react';
 import { Dimensions, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -16,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { getDeckColor } from '@/constants/Colors';
+import { useTheme } from '@/hooks/useTheme';
 import { Question } from '@/types/questions';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -42,6 +44,9 @@ export default function QuestionCard({
   showActions = true,
   disabled = false,
 }: QuestionCardProps) {
+  // Theme
+  const { isDark } = useTheme();
+  
   // Animation values
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -149,50 +154,82 @@ export default function QuestionCard({
             {
               width: CARD_WIDTH,
               height: CARD_HEIGHT,
-              shadowColor: '#000',
+              shadowColor: deckColors.primary,
               shadowOffset: { width: 0, height: 20 },
-              shadowOpacity: 0.15,
+              shadowOpacity: 0.25,
               shadowRadius: 30,
               elevation: 20,
             },
           ]}
           className="rounded-3xl overflow-hidden"
         >
-          {/* Beautiful Subtle Colored Background */}
-          <View 
-            className="absolute inset-0 rounded-3xl"
+          {/* Enhanced Colored Background with Gradient */}
+          <LinearGradient
+            colors={[`${deckColors.primary}25`, `${deckColors.secondary}15`]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={{
-              backgroundColor: `${deckColors.primary}35`,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 24,
             }}
           />
           
-          {/* Light overlay for readability */}
+          {/* Enhanced overlay for readability - theme aware */}
           <View 
-            className="absolute inset-0 rounded-3xl"
             style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.6)',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 24,
+              backgroundColor: isDark 
+                ? 'rgba(255, 255, 255, 0.1)' 
+                : 'rgba(255, 255, 255, 0.6)',
             }}
           />
           
-          {/* Subtle accent border */}
+          {/* Enhanced accent border with glow effect */}
           <View 
-            className="absolute inset-0 rounded-3xl border-2"
             style={{
-              borderColor: `${deckColors.primary}40`,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              borderRadius: 24,
+              borderWidth: 2,
+              borderColor: `${deckColors.primary}50`,
+              shadowColor: deckColors.primary,
+              shadowOffset: { width: 0, height: 0 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 8,
             }}
           />
 
           {/* Content */}
           <View className="flex-1 p-8 justify-between">
-            {/* Question Text Section - Clean and focused */}
+            {/* Question Text Section - Enhanced typography for glass backgrounds */}
             <View className="flex-1 justify-center items-center pt-8">
               <Text 
-                className="text-5xl font-light text-gray-900 text-center leading-tight px-6"
+                className="text-center leading-tight px-6"
                 style={{
-                  fontFamily: 'System',
-                  fontWeight: '200',
-                  letterSpacing: -0.6,
-                  lineHeight: 56,
+                  fontSize: 44,
+                  fontWeight: '600', // Increased from '200' for better readability
+                  letterSpacing: -0.8,
+                  lineHeight: 52,
+                  color: isDark ? '#ffffff' : '#1a1a1a', // Theme-aware color
+                  textShadowColor: isDark 
+                    ? 'rgba(0, 0, 0, 0.8)' 
+                    : 'rgba(255, 255, 255, 0.9)', // Better contrast
+                  textShadowOffset: { width: 0, height: 2 },
+                  textShadowRadius: 4,
+                  fontFamily: 'System', // Keep system font but with better weight
                 }}
               >
                 {question.text}

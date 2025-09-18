@@ -2,12 +2,14 @@
 // View and manage shared questions
 
 import { Button, Card, Chip } from '@/components/ui';
+import { useTheme } from '@/hooks/useTheme';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
 import { SafeAreaView, ScrollView, Text, View } from 'react-native';
 
 export default function SharedScreen() {
+  const { theme, isDark } = useTheme();
 
   // Mock shared questions data - will be replaced with real data
   const sharedQuestions = [

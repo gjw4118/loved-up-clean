@@ -6,6 +6,9 @@ import { UserProfile } from '@/types/user';
 import { User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+// Development bypass flag - set to true to skip Supabase initialization
+const DEV_BYPASS_AUTH = true;
+
 interface AuthContextType {
   user: User | null;
   profile: UserProfile | null;
@@ -75,6 +78,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    // Development bypass: skip Supabase initialization
+    if (DEV_BYPASS_AUTH) {
+      console.log('AuthContext: DEV BYPASS - Skipping Supabase initialization');
+      setLoading(false);
+      return;
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       try {
