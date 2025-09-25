@@ -10,3 +10,9 @@ module.exports = function (api) {
     ],
   };
 };
+
+// Reanimated configuration to disable strict mode warnings
+// This is added as a comment since the actual config should be in the app code
+// In your app code, you can add:
+// import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
+// configureReanimatedLogger({ level: ReanimatedLogLevel.Warn });
