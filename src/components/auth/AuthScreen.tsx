@@ -95,7 +95,7 @@ export default function AuthScreen() {
         {/* Logo/Brand Section */}
         <View className="items-center mb-16">
           <Image
-            source={require('@/assets/images/icon.png')}
+            source={require('../../../assets/images/icon.png')}
             style={{
               width: 120,
               height: 120,

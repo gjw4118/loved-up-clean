@@ -48,6 +48,10 @@ export { default as GlassButton } from './GlassButton';
 export { default as GlassCard } from './GlassCard';
 export { default as GlassTabBar } from './GlassTabBar';
 
+// ===== THEMED COMPONENTS =====
+// Theme-aware Text and View components
+export { Text as ThemedText, View as ThemedView, useThemeColor } from './Themed';
+
 // ===== LEGACY CUSTOM COMPONENTS (REMOVED) =====
 // Custom button and text components removed - using HeroUI equivalents
 

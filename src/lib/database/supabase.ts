@@ -1,41 +1,42 @@
 // Supabase Client Configuration
 // Based on PRD requirements for Connect app
 
-import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
+import { createClient } from '@supabase/supabase-js';
 
 // Environment variables (you'll need to add these to your .env)
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-// Create Supabase client with custom configuration
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Enable automatic token refresh
-    autoRefreshToken: true,
-    // Persist session in storage
-    persistSession: true,
-    // Detect session from URL (for OAuth flows)
-    detectSessionInUrl: true,
-    // Storage configuration will be set up with MMKV
-    storage: undefined, // Will be configured in auth setup
-  },
-  realtime: {
-    // Enable realtime for sharing features
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'connect-question-cards-app',
-    },
-  },
-});
+// Create Supabase client with custom configuration (or mock if env vars missing)
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // Enable automatic token refresh
+        autoRefreshToken: true,
+        // Persist session in storage
+        persistSession: true,
+        // Detect session from URL (for OAuth flows)
+        detectSessionInUrl: true,
+        // Storage configuration will be set up with AsyncStorage
+        storage: undefined, // Will be configured in auth setup
+      },
+      realtime: {
+        // Enable realtime for sharing features
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'connect-question-cards-app',
+        },
+      },
+    })
+  : ((() => {
+      console.warn('⚠️  Supabase not configured - create .env.local with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
+      return null as any; // Mock client for development
+    })());
 
 // Database type helpers
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];

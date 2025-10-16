@@ -1,56 +1,67 @@
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Simple MMKV instances
+// Using AsyncStorage instead of MMKV for Expo Go compatibility
+// MMKV requires custom native modules not available in Expo Go
 export const storage = {
-  app: new MMKV({ id: 'app' }),
-  cache: new MMKV({ id: 'cache' }),
-  auth: new MMKV({ id: 'auth' }),
-  state: new MMKV({ id: 'state' }),
-  prefs: new MMKV({ id: 'prefs' }),
+  app: AsyncStorage,
+  cache: AsyncStorage,
+  auth: AsyncStorage,
+  state: AsyncStorage,
+  prefs: AsyncStorage,
 };
 
-// Simple cache - just set/get/remove
+// Simple cache using AsyncStorage
 export const cache = {
-  set: <T>(key: string, data: T) => {
-    storage.cache.set(key, JSON.stringify(data));
+  set: async <T>(key: string, data: T) => {
+    try {
+      await AsyncStorage.setItem(`cache:${key}`, JSON.stringify(data));
+    } catch (error) {
+      console.warn('Cache set failed:', error);
+    }
   },
 
-  get: <T>(key: string): T | null => {
+  get: async <T>(key: string): Promise<T | null> => {
     try {
-      const value = storage.cache.getString(key);
+      const value = await AsyncStorage.getItem(`cache:${key}`);
       return value ? JSON.parse(value) : null;
     } catch {
       return null;
     }
   },
 
-  remove: (key: string) => {
-    storage.cache.delete(key);
-  },
-
-  clear: () => {
-    storage.cache.clearAll();
-  },
-};
-
-// Simple preferences
-export const prefs = {
-  set: <T>(key: string, value: T) => {
-    if (typeof value === 'string') {
-      storage.prefs.set(key, value);
-    } else if (typeof value === 'number') {
-      storage.prefs.set(key, value);
-    } else if (typeof value === 'boolean') {
-      storage.prefs.set(key, value);
-    } else {
-      storage.prefs.set(key, JSON.stringify(value));
+  remove: async (key: string) => {
+    try {
+      await AsyncStorage.removeItem(`cache:${key}`);
+    } catch (error) {
+      console.warn('Cache remove failed:', error);
     }
   },
 
-  get: <T>(key: string, defaultValue?: T): T | null => {
+  clear: async () => {
     try {
-      const value = storage.prefs.getString(key);
-      if (value === undefined) return defaultValue ?? null;
+      const keys = await AsyncStorage.getAllKeys();
+      const cacheKeys = keys.filter(k => k.startsWith('cache:'));
+      await AsyncStorage.multiRemove(cacheKeys);
+    } catch (error) {
+      console.warn('Cache clear failed:', error);
+    }
+  },
+};
+
+// Simple preferences using AsyncStorage
+export const prefs = {
+  set: async <T>(key: string, value: T) => {
+    try {
+      await AsyncStorage.setItem(`prefs:${key}`, JSON.stringify(value));
+    } catch (error) {
+      console.warn('Prefs set failed:', error);
+    }
+  },
+
+  get: async <T>(key: string, defaultValue?: T): Promise<T | null> => {
+    try {
+      const value = await AsyncStorage.getItem(`prefs:${key}`);
+      if (value === null) return defaultValue ?? null;
       
       try {
         return JSON.parse(value);
@@ -62,34 +73,58 @@ export const prefs = {
     }
   },
 
-  getBoolean: (key: string, defaultValue: boolean = false): boolean => {
-    return storage.prefs.getBoolean(key) ?? defaultValue;
+  getBoolean: async (key: string, defaultValue: boolean = false): Promise<boolean> => {
+    try {
+      const value = await AsyncStorage.getItem(`prefs:${key}`);
+      return value ? JSON.parse(value) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
   },
 
-  getNumber: (key: string, defaultValue: number = 0): number => {
-    return storage.prefs.getNumber(key) ?? defaultValue;
+  getNumber: async (key: string, defaultValue: number = 0): Promise<number> => {
+    try {
+      const value = await AsyncStorage.getItem(`prefs:${key}`);
+      return value ? JSON.parse(value) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
   },
 
-  getString: (key: string, defaultValue: string = ''): string => {
-    return storage.prefs.getString(key) ?? defaultValue;
+  getString: async (key: string, defaultValue: string = ''): Promise<string> => {
+    try {
+      const value = await AsyncStorage.getItem(`prefs:${key}`);
+      return value ?? defaultValue;
+    } catch {
+      return defaultValue;
+    }
   },
 
-  remove: (key: string) => {
-    storage.prefs.delete(key);
+  remove: async (key: string) => {
+    try {
+      await AsyncStorage.removeItem(`prefs:${key}`);
+    } catch (error) {
+      console.warn('Prefs remove failed:', error);
+    }
   },
 
-  clear: () => {
-    storage.prefs.clearAll();
+  clear: async () => {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const prefKeys = keys.filter(k => k.startsWith('prefs:'));
+      await AsyncStorage.multiRemove(prefKeys);
+    } catch (error) {
+      console.warn('Prefs clear failed:', error);
+    }
   },
 };
 
-// Auth helpers - quick access to session
+// Auth helpers using AsyncStorage
 export const auth = {
-  // Check if there's a session in cache (fast)
-  hasSession: (): boolean => {
+  // Check if there's a session in cache
+  hasSession: async (): Promise<boolean> => {
     try {
-      // Supabase stores the session with the project key
-      const keys = storage.auth.getAllKeys();
+      const keys = await AsyncStorage.getAllKeys();
       return keys.some(key => key.includes('auth-token') || key.includes('session'));
     } catch {
       return false;
@@ -97,12 +132,12 @@ export const auth = {
   },
 
   // Get the complete session if it exists
-  getSession: (): any | null => {
+  getSession: async (): Promise<any | null> => {
     try {
-      const keys = storage.auth.getAllKeys();
+      const keys = await AsyncStorage.getAllKeys();
       for (const key of keys) {
         if (key.includes('auth-token') || key.includes('session')) {
-          const sessionData = storage.auth.getString(key);
+          const sessionData = await AsyncStorage.getItem(key);
           if (sessionData) {
             return JSON.parse(sessionData);
           }
@@ -115,9 +150,9 @@ export const auth = {
   },
 
   // Check if the session is valid (not expired)
-  isSessionValid: (): boolean => {
+  isSessionValid: async (): Promise<boolean> => {
     try {
-      const session = auth.getSession();
+      const session = await auth.getSession();
       if (!session) return false;
       
       // Check expiration
@@ -131,29 +166,33 @@ export const auth = {
       return false;
     }
   },
-
-
 };
 
-// Simple debug
+// Simple debug using AsyncStorage
 export const debug = {
-  getAllKeys: () => ({
-    app: storage.app.getAllKeys(),
-    cache: storage.cache.getAllKeys(),
-    auth: storage.auth.getAllKeys(),
-    state: storage.state.getAllKeys(),
-    prefs: storage.prefs.getAllKeys(),
-  }),
+  getAllKeys: async () => {
+    const keys = await AsyncStorage.getAllKeys();
+    return {
+      app: keys.filter(k => k.startsWith('app:')),
+      cache: keys.filter(k => k.startsWith('cache:')),
+      auth: keys.filter(k => k.includes('auth') || k.includes('session')),
+      state: keys.filter(k => k.startsWith('state:')),
+      prefs: keys.filter(k => k.startsWith('prefs:')),
+    };
+  },
 
-  getSize: () => ({
-    app: storage.app.getAllKeys().length,
-    cache: storage.cache.getAllKeys().length,
-    auth: storage.auth.getAllKeys().length,
-    state: storage.state.getAllKeys().length,
-    prefs: storage.prefs.getAllKeys().length,
-  }),
+  getSize: async () => {
+    const keys = await debug.getAllKeys();
+    return {
+      app: keys.app.length,
+      cache: keys.cache.length,
+      auth: keys.auth.length,
+      state: keys.state.length,
+      prefs: keys.prefs.length,
+    };
+  },
 
-  clearAll: () => {
-    Object.values(storage).forEach(instance => instance.clearAll());
+  clearAll: async () => {
+    await AsyncStorage.clear();
   },
 }; 

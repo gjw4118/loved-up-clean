@@ -11,7 +11,7 @@ import { AuthProvider } from '@/lib/auth/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HeroUINativeProvider } from 'heroui-native';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
-import '../global.css';
+import '../../global.css';
 
 import { useTheme } from '@/hooks/useTheme';
 
@@ -30,7 +30,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -102,6 +102,14 @@ function RootLayoutNav() {
                   }} 
                 />
                 <Stack.Screen 
+                  name="welcome" 
+                  options={{ 
+                    headerShown: false,
+                    presentation: 'card',
+                    gestureEnabled: false 
+                  }} 
+                />
+                <Stack.Screen 
                   name="auth" 
                   options={{ 
                     headerShown: false,
@@ -110,7 +118,6 @@ function RootLayoutNav() {
                     gestureEnabled: false 
                   }} 
                 />
-                {/* Onboarding route removed - not needed for MVP */}
                 <Stack.Screen 
                   name="(tabs)" 
                   options={{ 

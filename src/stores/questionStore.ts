@@ -2,23 +2,20 @@
 // Manages current question session, navigation, and UI state
 
 import { InteractionType, Question, QuestionDeck } from '@/types/questions';
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-// MMKV storage for persistence
-const storage = new MMKV();
-
-const mmkvStorage = {
-  setItem: (name: string, value: string) => {
-    return storage.set(name, value);
+// AsyncStorage for Expo Go compatibility
+const asyncStorage = {
+  setItem: async (name: string, value: string) => {
+    return AsyncStorage.setItem(name, value);
   },
-  getItem: (name: string) => {
-    const value = storage.getString(name);
-    return value ?? null;
+  getItem: async (name: string) => {
+    return AsyncStorage.getItem(name);
   },
-  removeItem: (name: string) => {
-    return storage.delete(name);
+  removeItem: async (name: string) => {
+    return AsyncStorage.removeItem(name);
   },
 };
 
@@ -255,7 +252,7 @@ export const useQuestionStore = create<QuestionStore>()(
     }),
     {
       name: 'question-store',
-      storage: createJSONStorage(() => mmkvStorage),
+      storage: createJSONStorage(() => asyncStorage),
       // Only persist essential session data
       partialize: (state) => ({
         currentSession: state.currentSession,

@@ -1,14 +1,24 @@
 // Profile Store
 // Manages user profile data and settings with Zustand
 
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { Profile } from '@/types/profile';
 
-// Initialize MMKV storage for persistence
-const storage = new MMKV();
+// AsyncStorage for Expo Go compatibility
+const asyncStorage = {
+  setItem: async (name: string, value: string) => {
+    return AsyncStorage.setItem(name, value);
+  },
+  getItem: async (name: string) => {
+    return AsyncStorage.getItem(name);
+  },
+  removeItem: async (name: string) => {
+    return AsyncStorage.removeItem(name);
+  },
+};
 
 interface ProfileState {
   // State
@@ -120,18 +130,7 @@ export const useProfileStore = create<ProfileState>()(
     }),
     {
       name: 'profile-store',
-      storage: createJSONStorage(() => ({
-        getItem: (name) => {
-          const value = storage.getString(name);
-          return value ?? null;
-        },
-        setItem: (name, value) => {
-          storage.set(name, value);
-        },
-        removeItem: (name) => {
-          storage.delete(name);
-        },
-      })),
+      storage: createJSONStorage(() => asyncStorage),
       // Only persist the profile data, not loading/error states
       partialize: (state) => ({ profile: state.profile }),
     }

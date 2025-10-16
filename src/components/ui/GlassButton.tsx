@@ -1,7 +1,7 @@
 // Enhanced Glass Button Component
 // Uses HeroUI Button as base with iOS 26 glass effects overlay
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { BlurView } from 'expo-blur';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import * as Haptics from 'expo-haptics';

@@ -1,14 +1,16 @@
 // Question Browsing Screen
-// Displays questions from selected deck with swipeable cards and paywall integration
+// Displays questions from selected deck with Slack-style swipeable card stack
 
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import QuestionCard from '@/components/cards/QuestionCard';
+import { QuestionCardStack } from '@/components/cards/QuestionCardStack';
+import { QuestionStackAnimationProvider } from '@/lib/contexts/QuestionStackAnimationContext';
+import { QuestionCardAnimationProvider } from '@/lib/contexts/QuestionCardAnimationContext';
 import { GlassButton, StatusBar } from '@/components/ui';
 import Colors, { getDeckColor } from '@/constants/Colors';
 import { useQuestionDecks, useQuestions } from '@/hooks/questions/useQuestions';
@@ -445,62 +447,18 @@ export default function QuestionBrowsingScreen() {
         </View>
       </View>
 
-      {/* Question Card Stack - Improved Visual Design */}
+      {/* Question Card Stack - New Slack-style implementation */}
       <View className="flex-1 mt-4" style={{ backgroundColor: 'transparent' }}>
-        <View className="items-center justify-center flex-1 px-6 relative" style={{ backgroundColor: 'transparent' }}>
-          {stackQuestions.map((question, index) => {
-            const isTopCard = index === stackQuestions.length - 1;
-            const isSecondCard = index === stackQuestions.length - 2;
-
-            // Only show 2 cards max for better visual hierarchy
-            if (index < stackQuestions.length - 2) return null;
-
-            return (
-              <View
-                key={`card-${question.id}-${index}`}
-                className="absolute"
-                style={{
-                  zIndex: isTopCard ? 3 : 2,
-                }}
-              >
-                {/* Subtle background for non-top cards */}
-                {!isTopCard && (
-                  <View
-                    className="absolute inset-0 rounded-3xl"
-                    style={{
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                      borderRadius: 24,
-                    }}
-                  />
-                )}
-
-                {/* Visual indicator for interactive card */}
-                {isTopCard && (
-                  <View
-                    className="absolute -top-2 -right-2 z-10 rounded-full px-2 py-1"
-                    style={{
-                      backgroundColor: deckColors?.primary || '#FF6B35',
-                    }}
-                  >
-                    <Text className="text-white text-xs font-bold">SWIPE</Text>
-                  </View>
-                )}
-
-                <QuestionCard
-                  question={question}
-                  deckCategory={deck?.category || 'friends'}
-                  onComplete={isTopCard ? handleComplete : undefined}
-                  onSkip={isTopCard ? handleSkip : undefined}
-                  onShare={isTopCard ? handleShare : undefined}
-                  showActions={false}
-                  disabled={!isTopCard}
-                  isInStack={!isTopCard}
-                  stackPosition={isTopCard ? 'top' : 'bottom'}
-                />
-              </View>
-            );
-          })}
-        </View>
+        <QuestionStackAnimationProvider totalQuestions={finalAvailableQuestions.length}>
+          <QuestionCardAnimationProvider>
+            <View className="items-center justify-center flex-1 px-6" style={{ backgroundColor: 'transparent' }}>
+              <QuestionCardStack
+                questions={finalAvailableQuestions}
+                deckCategory={deck?.category || 'friends'}
+              />
+            </View>
+          </QuestionCardAnimationProvider>
+        </QuestionStackAnimationProvider>
       </View>
 
       {/* Swipe Hint - Elegant design */}
