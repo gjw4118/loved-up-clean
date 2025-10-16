@@ -28,9 +28,9 @@ export const QuestionStackAnimationProvider: FC<
   // - animatedQuestionIndex allows fractional indices while swiping (visual progress)
   // - current/prev indices are integers for business logic and post-gesture settling
   const isDragging = useSharedValue(false);
-  const animatedQuestionIndex = useSharedValue(lastItemIndex);
-  const currentQuestionIndex = useSharedValue(lastItemIndex);
-  const prevQuestionIndex = useSharedValue(lastItemIndex);
+  const animatedQuestionIndex = useSharedValue(0);
+  const currentQuestionIndex = useSharedValue(0);
+  const prevQuestionIndex = useSharedValue(0);
   
   // Button actions set these flags; cards listen and animate off-screen
   const isCompletePressed = useSharedValue(false);

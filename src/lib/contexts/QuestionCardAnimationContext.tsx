@@ -1,13 +1,14 @@
-import { createContext, FC, PropsWithChildren, useCallback, useContext } from 'react';
+import * as Haptics from 'expo-haptics';
+import { createContext, FC, PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import {
-  SharedValue,
-  useSharedValue,
-  withSpring,
-  withTiming,
+    runOnJS,
+    SharedValue,
+    useSharedValue,
+    withSpring,
+    withTiming,
 } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
 import { useQuestionStackAnimation } from './QuestionStackAnimationContext';
 
 // QuestionCardAnimationContext
@@ -43,8 +44,16 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
   } = useQuestionStackAnimation();
 
   const { width } = useWindowDimensions();
-  // Threshold: quarter of screen width feels reachable yet deliberate
-  const panDistance = width / 4;
+  
+  // Convert to shared values for worklet access
+  const panDistanceShared = useSharedValue(width / 4);
+  const widthShared = useSharedValue(width);
+
+  // Update when width changes
+  useEffect(() => {
+    panDistanceShared.value = width / 4;
+    widthShared.value = width;
+  }, [width, panDistanceShared, widthShared]);
 
   // panX, panY are used to move the card along the screen
   const panX = useSharedValue(0);
@@ -56,26 +65,42 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
   const hasTriggeredHaptic = useSharedValue(false);
 
   const handleQuestionComplete = useCallback(() => {
-    // Move to next question
-    prevQuestionIndex.value = currentQuestionIndex.value;
-    currentQuestionIndex.value = currentQuestionIndex.value - 1;
+    const nextIndex = currentQuestionIndex.value + 1;
     
-    // Animate card off-screen to the right
-    panX.value = withTiming(width * 2, { duration: 500 });
+    // Store previous index for undo
+    prevQuestionIndex.value = currentQuestionIndex.value;
+    currentQuestionIndex.value = nextIndex;
+    
+    // Animate card off-screen to the right, then reset
+    panX.value = withTiming(widthShared.value * 2, { duration: 500 }, (finished) => {
+      if (finished) {
+        panX.value = 0;
+        panY.value = 0;
+        animatedQuestionIndex.value = nextIndex;
+      }
+    });
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, [currentQuestionIndex, prevQuestionIndex, panX, width]);
+  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared]);
 
   const handleQuestionSkip = useCallback(() => {
-    // Move to next question
-    prevQuestionIndex.value = currentQuestionIndex.value;
-    currentQuestionIndex.value = currentQuestionIndex.value - 1;
+    const nextIndex = currentQuestionIndex.value + 1;
     
-    // Animate card off-screen to the left
-    panX.value = withTiming(-width * 2, { duration: 500 });
+    // Store previous index for undo
+    prevQuestionIndex.value = currentQuestionIndex.value;
+    currentQuestionIndex.value = nextIndex;
+    
+    // Animate card off-screen to the left, then reset
+    panX.value = withTiming(-widthShared.value * 2, { duration: 500 }, (finished) => {
+      if (finished) {
+        panX.value = 0;
+        panY.value = 0;
+        animatedQuestionIndex.value = nextIndex;
+      }
+    });
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [currentQuestionIndex, prevQuestionIndex, panX, width]);
+  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared]);
 
   // Main pan gesture: updates visual progress during drag and commits on release
   const gesture = Gesture.Pan()
@@ -88,33 +113,42 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
     .onChange((event) => {
       'worklet';
       // Progress in "card index" space: 1.0 shift equals one card dismissed
-      const progress = currentQuestionIndex.value - Math.abs(event.translationX) / panDistance;
+      const progress = currentQuestionIndex.value + Math.abs(event.translationX) / panDistanceShared.value;
       // Clamp progress to at most one card ahead to avoid skipping
       animatedQuestionIndex.value =
-        progress < currentQuestionIndex.value - 1 ? currentQuestionIndex.value - 1 : progress;
+        progress > currentQuestionIndex.value + 1 ? currentQuestionIndex.value + 1 : progress;
 
       panX.value = event.translationX;
       panY.value = event.translationY;
 
       // Trigger haptic when crossing threshold
-      if (Math.abs(event.translationX) > panDistance && !hasTriggeredHaptic.value) {
+      if (Math.abs(event.translationX) > panDistanceShared.value && !hasTriggeredHaptic.value) {
         hasTriggeredHaptic.value = true;
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Light);
       }
     })
     .onEnd((event) => {
       'worklet';
       isDragging.value = false;
 
-      if (Math.abs(event.translationX) > panDistance) {
+      if (Math.abs(event.translationX) > panDistanceShared.value) {
         // Commit: move to next card (left or right) and remember previous for undo logic
+        const nextIndex = Math.round(currentQuestionIndex.value + 1);
+        
+        // Store previous index
         prevQuestionIndex.value = Math.round(currentQuestionIndex.value);
-        currentQuestionIndex.value = Math.round(currentQuestionIndex.value - 1);
+        currentQuestionIndex.value = nextIndex;
 
         const sign = event.translationX > 0 ? 1 : -1;
 
-        // Fling card off-screen horizontally
-        panX.value = withTiming(sign * width * 2, { duration: 500 });
+        // Fling card off-screen horizontally, then reset
+        panX.value = withTiming(sign * widthShared.value * 2, { duration: 500 }, (finished) => {
+          if (finished) {
+            panX.value = 0;
+            panY.value = 0;
+            animatedQuestionIndex.value = nextIndex;
+          }
+        });
         panY.value = withTiming(0, { duration: 500 });
       } else {
         // Spring back feels snappy but controlled
@@ -123,7 +157,7 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
 
         // Snap animated index to integer
         animatedQuestionIndex.value = withTiming(
-          Math.ceil(currentQuestionIndex.value),
+          Math.round(currentQuestionIndex.value),
           { duration: 200 }
         );
       }
@@ -133,7 +167,7 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
     panX,
     panY,
     absoluteYAnchor,
-    panDistance,
+    panDistance: panDistanceShared.value,
     handleQuestionComplete,
     handleQuestionSkip,
   };
