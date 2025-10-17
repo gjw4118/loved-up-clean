@@ -10,20 +10,20 @@ import { Platform } from 'react-native';
 
 // Safely import notifications
 let Notifications: any = null;
+let isAvailable = false;
+
 try {
   Notifications = require('expo-notifications');
+  // Check if the native module is actually available
+  isAvailable = Notifications && typeof Notifications.getPermissionsAsync === 'function';
 } catch (error) {
   console.warn('expo-notifications not available:', error);
+  isAvailable = false;
 }
 
 // Check if notifications are available
 const isNotificationsAvailable = () => {
-  try {
-    return Notifications && typeof Notifications.getPermissionsAsync === 'function';
-  } catch (error) {
-    console.warn('Notifications not available:', error);
-    return false;
-  }
+  return isAvailable;
 };
 
 // Configure notification handler (for when we do send notifications later)
@@ -119,9 +119,21 @@ export const useNotifications = () => {
       expoPushToken: null,
       isEnabled: false,
       isLoading: false,
-      enablePushNotifications: async () => false,
-      disablePushNotifications: async () => false,
-      togglePushNotifications: async () => false,
+      enablePushNotifications: async () => {
+        console.warn('Push notifications not available in this environment');
+        return false;
+      },
+      disablePushNotifications: async () => {
+        console.warn('Push notifications not available in this environment');
+        return false;
+      },
+      togglePushNotifications: async () => {
+        console.warn('Push notifications not available in this environment');
+        return false;
+      },
+      openSettings: async () => {
+        console.warn('Settings not available in this environment');
+      },
     };
   }
 

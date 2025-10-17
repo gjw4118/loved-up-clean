@@ -16,36 +16,25 @@ export default function IndexScreen() {
 
   useEffect(() => {
     const checkOnboardingAndRoute = async () => {
-      console.log('IndexScreen: Checking onboarding and auth state', {
-        user: !!user,
-        loading,
-        devBypass: DEV_BYPASS_AUTH,
-      });
-
       if (!loading) {
         const { hasSeenOnboarding } = await import('@/lib/storage/onboarding');
         const seenOnboarding = await hasSeenOnboarding();
-        console.log('IndexScreen: Onboarding status:', { seenOnboarding });
         setCheckingOnboarding(false);
 
         if (!seenOnboarding) {
-          console.log('IndexScreen: First launch - showing onboarding');
           router.replace('/welcome');
           return;
         }
 
         // Development bypass: skip authentication and go directly to tabs
         if (DEV_BYPASS_AUTH) {
-          console.log('IndexScreen: DEV BYPASS - Navigating directly to tabs');
           router.replace('/(tabs)');
           return;
         }
 
         if (user) {
-          console.log('IndexScreen: User authenticated, navigating to tabs');
           router.replace('/(tabs)');
         } else {
-          console.log('IndexScreen: User not authenticated, navigating to auth');
           router.replace('/auth');
         }
       }

@@ -14,8 +14,6 @@ import { useQuestionDecks } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import { supabase } from '@/lib/database/supabase';
-import { resetOnboardingForTesting } from '@/lib/storage/onboarding';
 import { enrichDecks } from '@/utils/deckEnrichment';
 
 // Enrich database decks with UI metadata
@@ -30,10 +28,6 @@ const createDeckList = (dbDecks: any[]) => {
 export default function MainDecksScreen() {
   const { theme, isDark } = useTheme();
   
-  // Debug theme
-  React.useEffect(() => {
-    console.log('🏠 Home Screen Theme:', { theme, isDark });
-  }, [theme, isDark]);
   
   // Fetch decks from database
   const { data: dbDecks, isLoading: decksLoading } = useQuestionDecks();
@@ -103,56 +97,6 @@ export default function MainDecksScreen() {
           paddingBottom: 32,
         }}
       >
-        {/* Debug: Reset onboarding button */}
-        <Pressable 
-          onPress={async () => {
-            await resetOnboardingForTesting();
-            console.log('Onboarding reset - restart app to see welcome screen');
-          }}
-          className="mb-4 px-4 py-2 bg-red-500 rounded-lg"
-        >
-          <Text className="text-white text-sm">🧪 Reset Onboarding (Debug)</Text>
-        </Pressable>
-
-        {/* Debug: Reset user profile for Apple Sign-In testing */}
-        <Pressable 
-          onPress={async () => {
-            try {
-              const { error } = await supabase.auth.signOut();
-              if (error) throw error;
-              console.log('User signed out - sign in again to test Apple name capture');
-            } catch (error) {
-              console.error('Sign out error:', error);
-            }
-          }}
-          className="mb-4 px-4 py-2 bg-blue-500 rounded-lg"
-        >
-          <Text className="text-white text-sm">🍎 Reset User (Test Apple Sign-In)</Text>
-        </Pressable>
-
-        {/* Debug: Set test name manually */}
-        <Pressable 
-          onPress={async () => {
-            try {
-              const { error } = await supabase
-                .from('user_profiles')
-                .update({
-                  first_name: 'Greg',
-                  last_name: 'Woulfe',
-                  display_name: 'Greg Woulfe',
-                })
-                .eq('user_id', 'c1d70050-2f74-41ff-99cb-3d2987b07ecc');
-              
-              if (error) throw error;
-              console.log('✅ Test name set: Greg Woulfe');
-            } catch (error) {
-              console.error('Error setting test name:', error);
-            }
-          }}
-          className="mb-4 px-4 py-2 bg-green-500 rounded-lg"
-        >
-          <Text className="text-white text-sm">🧪 Set Test Name (Greg Woulfe)</Text>
-        </Pressable>
         {/* Premium Bento Grid Layout - Full Screen */}
         {decks && decks.length >= 5 && (
           <View style={{ gap: 12 }}>

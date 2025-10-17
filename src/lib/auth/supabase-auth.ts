@@ -42,15 +42,9 @@ export const signInWithApple = async () => {
         if (lastName) profileData.last_name = lastName;
         if (displayName) profileData.display_name = displayName;
 
-        console.log('🍎 Apple Sign-In: Captured name data:', {
-          firstName,
-          lastName,
-          displayName,
-        });
       } else {
         // Fallback to email-based display name if no name provided
         profileData.display_name = data.user.email?.split('@')[0] || 'User';
-        console.log('🍎 Apple Sign-In: No name provided, using email fallback');
       }
 
       // Upsert profile with Apple data
@@ -62,8 +56,6 @@ export const signInWithApple = async () => {
 
       if (profileError) {
         console.error('Error updating profile with Apple data:', profileError);
-      } else {
-        console.log('✅ Profile updated with Apple Sign-In data');
       }
     }
 

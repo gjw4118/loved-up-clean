@@ -267,6 +267,12 @@ export default function YouScreen() {
                             }
                           ]
                         );
+                      } else if (errorMessage.includes('not available in this environment')) {
+                        Alert.alert(
+                          'Not Available',
+                          'Push notifications are not available in this environment. Please use a physical device with a development build to enable notifications.',
+                          [{ text: 'OK' }]
+                        );
                       } else {
                         Alert.alert(
                           'Error',
