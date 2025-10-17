@@ -65,6 +65,8 @@ export type UserInteraction = Tables<'user_interactions'>;
 export type QuestionSession = Tables<'question_sessions'>;
 export type SharedQuestion = Tables<'shared_questions'>;
 export type UserProgress = Tables<'user_progress'>;
+export type QuestionThread = Tables<'question_threads'>;
+export type QuestionResponse = Tables<'question_responses'>;
 
 // Insert types
 export type QuestionDeckInsert = Database['public']['Tables']['question_decks']['Insert'];
@@ -186,4 +188,152 @@ export const trackQuestionShare = async (questionId: string, shareMethod: string
   });
 
   if (error) console.error('Error tracking question share:', error);
+};
+
+// Question sharing helpers
+export const createQuestionThread = async (
+  questionId: string,
+  senderId: string
+): Promise<string> => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { data, error } = await supabase
+    .from('question_threads')
+    .insert({
+      question_id: questionId,
+      sender_id: senderId,
+      status: 'pending',
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data.id;
+};
+
+export const getQuestionThread = async (threadId: string) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { data, error } = await supabase
+    .from('question_threads')
+    .select(`
+      *,
+      questions (
+        id,
+        text,
+        deck_id,
+        question_decks (
+          name,
+          category
+        )
+      ),
+      sender:user_profiles!sender_id (
+        id,
+        display_name,
+        avatar_url
+      ),
+      recipient:user_profiles!recipient_id (
+        id,
+        display_name,
+        avatar_url
+      ),
+      question_responses (
+        id,
+        response_text,
+        created_at,
+        responder:user_profiles (
+          id,
+          display_name,
+          avatar_url
+        )
+      )
+    `)
+    .eq('id', threadId)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const getUserThreads = async (userId: string) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { data, error } = await supabase
+    .from('question_threads')
+    .select(`
+      *,
+      questions (
+        id,
+        text,
+        question_decks (
+          name,
+          category
+        )
+      ),
+      sender:user_profiles!sender_id (
+        id,
+        display_name,
+        avatar_url
+      ),
+      recipient:user_profiles!recipient_id (
+        id,
+        display_name,
+        avatar_url
+      ),
+      question_responses (
+        id,
+        response_text,
+        created_at
+      )
+    `)
+    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order('updated_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateThreadRecipient = async (
+  threadId: string,
+  recipientId: string
+) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  const { error } = await supabase
+    .from('question_threads')
+    .update({ recipient_id: recipientId })
+    .eq('id', threadId);
+
+  if (error) throw error;
+};
+
+export const createQuestionResponse = async (
+  threadId: string,
+  responderId: string,
+  responseText: string
+) => {
+  if (!supabase) throw new Error('Supabase not configured');
+  
+  // Create response
+  const { data: response, error: responseError } = await supabase
+    .from('question_responses')
+    .insert({
+      thread_id: threadId,
+      responder_id: responderId,
+      response_text: responseText,
+    })
+    .select()
+    .single();
+
+  if (responseError) throw responseError;
+
+  // Update thread status
+  const { error: threadError } = await supabase
+    .from('question_threads')
+    .update({ status: 'answered' })
+    .eq('id', threadId);
+
+  if (threadError) throw threadError;
+
+  return response;
 };

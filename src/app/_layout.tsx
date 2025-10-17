@@ -7,13 +7,14 @@ import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
-import { AuthProvider } from '@/lib/auth/AuthContext';
+import { AuthProvider, useAuth } from '@/lib/auth/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HeroUINativeProvider } from 'heroui-native';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import '../../global.css';
 
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/lib/contexts/ThemeContext';
+import { setupDeepLinkListeners, handleDeepLink } from '@/lib/linking/deepLinkHandler';
 
 
 
@@ -81,6 +82,7 @@ function RootLayoutNav() {
           <NavigationThemeProvider>
             <HeroUINativeProvider>
               <AuthProvider>
+              <DeepLinkHandler />
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -149,4 +151,18 @@ function NavigationThemeProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ThemeProvider>
   );
+}
+
+function DeepLinkHandler() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const cleanup = setupDeepLinkListeners(async (url) => {
+      await handleDeepLink(url, !!user);
+    });
+
+    return cleanup;
+  }, [user]);
+
+  return null;
 }

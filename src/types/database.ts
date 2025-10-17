@@ -214,6 +214,7 @@ export interface Database {
           shared_via: 'imessage' | 'in_app' | 'link'
           recipient_info: string | null
           shared_at: string
+          thread_id: string | null
         }
         Insert: {
           id?: string
@@ -222,6 +223,7 @@ export interface Database {
           shared_via: 'imessage' | 'in_app' | 'link'
           recipient_info?: string | null
           shared_at?: string
+          thread_id?: string | null
         }
         Update: {
           id?: string
@@ -230,6 +232,62 @@ export interface Database {
           shared_via?: 'imessage' | 'in_app' | 'link'
           recipient_info?: string | null
           shared_at?: string
+          thread_id?: string | null
+        }
+      }
+      question_threads: {
+        Row: {
+          id: string
+          question_id: string
+          sender_id: string
+          recipient_contact: string | null
+          recipient_id: string | null
+          status: 'pending' | 'answered'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          question_id: string
+          sender_id: string
+          recipient_contact?: string | null
+          recipient_id?: string | null
+          status?: 'pending' | 'answered'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          question_id?: string
+          sender_id?: string
+          recipient_contact?: string | null
+          recipient_id?: string | null
+          status?: 'pending' | 'answered'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      question_responses: {
+        Row: {
+          id: string
+          thread_id: string
+          responder_id: string
+          response_text: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          thread_id: string
+          responder_id: string
+          response_text: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          thread_id?: string
+          responder_id?: string
+          response_text?: string
+          created_at?: string
         }
       }
       user_progress: {

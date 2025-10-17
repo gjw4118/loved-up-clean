@@ -16,6 +16,11 @@ export default function TabLayout() {
         <Label>Decks</Label>
       </NativeTabs.Trigger>
       
+      <NativeTabs.Trigger name="us">
+        <Icon sf={{ default: 'bubble.left.and.bubble.right', selected: 'bubble.left.and.bubble.right.fill' }} />
+        <Label>Us</Label>
+      </NativeTabs.Trigger>
+      
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
         <Label>You</Label>

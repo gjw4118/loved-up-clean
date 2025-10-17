@@ -3,6 +3,7 @@ import { useQuestionStackAnimation } from '@/lib/contexts/QuestionStackAnimation
 import { Question } from '@/types/questions';
 import React, { FC, memo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
     interpolate,
     runOnJS,
@@ -11,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import QuestionCard from './QuestionCard';
 import { SwipeIndicators } from './SwipeIndicators';
+import { useShareQuestion } from '@/hooks/useShareQuestion';
 
 // QuestionCardStack Component
 // Renders stack of 3 cards with Slack-style depth effects
@@ -25,12 +27,20 @@ interface CardContainerProps {
   question: Question;
   index: number;
   deckCategory: string;
+  onLongPress: () => void;
 }
 
-const CardContainer: FC<CardContainerProps> = memo(({ question, index, deckCategory }) => {
+const CardContainer: FC<CardContainerProps> = memo(({ question, index, deckCategory, onLongPress }) => {
   const { width, height } = useWindowDimensions();
   const { animatedQuestionIndex, currentQuestionIndex } = useQuestionStackAnimation();
   const { panX, panY, absoluteYAnchor, panDistance } = useQuestionCardAnimation();
+
+  // Long press gesture for sharing
+  const longPress = Gesture.LongPress()
+    .minDuration(500)
+    .onStart(() => {
+      runOnJS(onLongPress)();
+    });
 
   const containerStyle = useAnimatedStyle(() => {
     // Two-card system: only show current card and next card
@@ -87,23 +97,27 @@ const CardContainer: FC<CardContainerProps> = memo(({ question, index, deckCateg
     };
   });
 
+  const isTopCard = index === currentQuestionIndex.value;
+
   return (
     <Animated.View
       key={`card-${question.id}-${index}`}
       style={[styles.container, containerStyle]}
     >
-      <View className="flex-1 bg-neutral-900 border border-neutral-800 rounded-3xl shadow-lg overflow-hidden">
-        {/* Question Card */}
-        <QuestionCard
-          question={question}
-          deckCategory={deckCategory}
-          isTopCard={index === currentQuestionIndex.value}
-          stackPosition={index === currentQuestionIndex.value ? 'top' : 'bottom'}
-        />
+      <GestureDetector gesture={longPress}>
+        <View className="flex-1 bg-neutral-900 border border-neutral-800 rounded-3xl shadow-lg overflow-hidden">
+          {/* Question Card */}
+          <QuestionCard
+            question={question}
+            deckCategory={deckCategory}
+            isTopCard={isTopCard}
+            stackPosition={isTopCard ? 'top' : 'bottom'}
+          />
 
-        {/* Swipe Indicators (only on top card) */}
-        {index === currentQuestionIndex.value && <SwipeIndicators />}
-      </View>
+          {/* Swipe Indicators (only on top card) */}
+          {isTopCard && <SwipeIndicators />}
+        </View>
+      </GestureDetector>
     </Animated.View>
   );
 });
@@ -116,6 +130,7 @@ export const QuestionCardStack: FC<QuestionCardStackProps> = ({
 }) => {
   const { currentQuestionIndex } = useQuestionStackAnimation();
   const [currentIdx, setCurrentIdx] = useState(0);
+  const { shareQuestion } = useShareQuestion();
 
   // Use animated reaction to sync state with shared value
   useAnimatedReaction(
@@ -125,6 +140,11 @@ export const QuestionCardStack: FC<QuestionCardStackProps> = ({
     },
     [currentQuestionIndex]
   );
+
+  // Handle long press on card to share
+  const handleLongPress = (question: Question) => {
+    shareQuestion(question.id, question.text);
+  };
 
   // Two-card system: only render current card and next card
   const visibleQuestions = questions.slice(
@@ -144,6 +164,7 @@ export const QuestionCardStack: FC<QuestionCardStackProps> = ({
             question={question}
             index={actualIndex}
             deckCategory={deckCategory}
+            onLongPress={() => handleLongPress(question)}
           />
         );
       })}
