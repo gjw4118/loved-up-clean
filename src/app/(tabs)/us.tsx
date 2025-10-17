@@ -121,7 +121,7 @@ export default function UsScreen() {
             </Text>
           </View>
         ) : (
-          threads.map((thread: any) => {
+          threads.map((thread: any, index: number) => {
             const otherPersonName = getOtherPersonName(thread);
             const initials = getInitials(otherPersonName);
             const statusBadge = getStatusBadge(thread);
@@ -129,7 +129,7 @@ export default function UsScreen() {
 
             return (
               <TouchableOpacity
-                key={thread.thread_id}
+                key={thread.thread_id || `thread-${index}`}
                 onPress={() => router.push(`/threads/${thread.thread_id}`)}
                 activeOpacity={0.7}
               >
