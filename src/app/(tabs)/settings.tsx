@@ -17,7 +17,7 @@ export default function YouScreen() {
   const { isDark, toggleTheme } = useTheme();
   const { signOut, user, profile } = useAuth();
   const { preferences, resetPreferences } = useFocusMode();
-  const { isEnabled: pushEnabled, isLoading: pushLoading, togglePushNotifications } = useNotifications();
+  const { isEnabled: pushEnabled, isLoading: pushLoading, togglePushNotifications, openSettings } = useNotifications();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -239,16 +239,41 @@ export default function YouScreen() {
                   disabled={pushLoading}
                   onValueChange={async () => {
                     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    const success = await togglePushNotifications();
-                    if (success) {
-                      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                    } else {
+                    try {
+                      const success = await togglePushNotifications();
+                      if (success) {
+                        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                      } else {
+                        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                        Alert.alert(
+                          'Error',
+                          'Failed to update notification settings. Please try again.',
+                          [{ text: 'OK' }]
+                        );
+                      }
+                    } catch (error) {
                       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-                      Alert.alert(
-                        'Permission Required',
-                        'Please enable notifications in your device settings.',
-                        [{ text: 'OK' }]
-                      );
+                      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                      
+                      if (errorMessage.includes('Permissions blocked') || errorMessage.includes('device settings')) {
+                        Alert.alert(
+                          'Permission Required',
+                          'Push notifications are disabled in your device settings. Please enable them in Settings > Notifications to receive notifications.',
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            { 
+                              text: 'Open Settings', 
+                              onPress: openSettings
+                            }
+                          ]
+                        );
+                      } else {
+                        Alert.alert(
+                          'Error',
+                          errorMessage,
+                          [{ text: 'OK' }]
+                        );
+                      }
                     }
                   }}
                   trackColor={{ false: '#767577', true: '#a855f7' }}

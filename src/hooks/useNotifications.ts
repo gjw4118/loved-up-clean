@@ -56,18 +56,33 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
 
   try {
     // Check existing permissions
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus, canAskAgain } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     
     // Request permissions if not granted
     if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
+      if (!canAskAgain) {
+        console.log('❌ Push notification permissions blocked - user must enable in device settings');
+        throw new Error('Permissions blocked. Please enable notifications in your device settings.');
+      }
+      
+      const { status } = await Notifications.requestPermissionsAsync({
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          allowDisplayInCarPlay: true,
+          allowCriticalAlerts: false,
+          provideAppNotificationSettings: true,
+          allowProvisional: false,
+        },
+      });
       finalStatus = status;
     }
     
     if (finalStatus !== 'granted') {
-      console.log('❌ Push notification permissions denied');
-      return null;
+      console.log('❌ Push notification permissions denied:', finalStatus);
+      throw new Error(`Permissions denied. Status: ${finalStatus}`);
     }
 
     // Set up Android notification channel
@@ -88,7 +103,7 @@ async function registerForPushNotificationsAsync(): Promise<string | null> {
     
   } catch (error) {
     console.error('❌ Error registering for push notifications:', error);
-    return null;
+    throw error; // Re-throw to allow proper error handling in the calling function
   }
 }
 
@@ -197,7 +212,8 @@ export const useNotifications = () => {
       
     } catch (error) {
       console.error('❌ Error enabling push notifications:', error);
-      return false;
+      // Re-throw the error so the UI can handle it properly
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -234,10 +250,16 @@ export const useNotifications = () => {
 
   // Toggle push notifications
   const togglePushNotifications = async () => {
-    if (isEnabled) {
-      return await disablePushNotifications();
-    } else {
-      return await enablePushNotifications();
+    try {
+      if (isEnabled) {
+        return await disablePushNotifications();
+      } else {
+        return await enablePushNotifications();
+      }
+    } catch (error) {
+      console.error('❌ Error toggling push notifications:', error);
+      // Re-throw the error so the UI can handle it properly
+      throw error;
     }
   };
 
@@ -249,6 +271,16 @@ export const useNotifications = () => {
     }
   }, [user?.id]);
 
+  // Open device settings
+  const openSettings = async () => {
+    try {
+      const { openSettings } = await import('expo-linking');
+      await openSettings();
+    } catch (error) {
+      console.error('❌ Error opening settings:', error);
+    }
+  };
+
   return {
     expoPushToken,
     isEnabled,
@@ -256,6 +288,7 @@ export const useNotifications = () => {
     enablePushNotifications,
     disablePushNotifications,
     togglePushNotifications,
+    openSettings,
   };
 };
 

@@ -15,6 +15,7 @@ import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { resetOnboardingForTesting } from '@/lib/storage/onboarding';
+import { supabase } from '@/lib/database/supabase';
 import { enrichDecks } from '@/utils/deckEnrichment';
 
 // Enrich database decks with UI metadata
@@ -111,6 +112,22 @@ export default function MainDecksScreen() {
           className="mb-4 px-4 py-2 bg-red-500 rounded-lg"
         >
           <Text className="text-white text-sm">🧪 Reset Onboarding (Debug)</Text>
+        </Pressable>
+
+        {/* Debug: Reset user profile for Apple Sign-In testing */}
+        <Pressable 
+          onPress={async () => {
+            try {
+              const { error } = await supabase.auth.signOut();
+              if (error) throw error;
+              console.log('User signed out - sign in again to test Apple name capture');
+            } catch (error) {
+              console.error('Sign out error:', error);
+            }
+          }}
+          className="mb-4 px-4 py-2 bg-blue-500 rounded-lg"
+        >
+          <Text className="text-white text-sm">🍎 Reset User (Test Apple Sign-In)</Text>
         </Pressable>
         {/* Premium Bento Grid Layout - Full Screen */}
         {decks && decks.length >= 5 && (
