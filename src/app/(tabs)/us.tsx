@@ -3,26 +3,27 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useSharedQuestions } from '@/hooks/useSharedQuestions';
 import { supabase } from '@/lib/database/supabase';
-import { Accordion, Card, Chip } from 'heroui-native';
-import { router } from 'expo-router';
+import { LinearGradient, StatusBar } from '@/components/ui';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   RefreshControl,
   ScrollView,
+  StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
-import * as Haptics from 'expo-haptics';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function UsScreen() {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const { threads, isLoading, refetch } = useSharedQuestions();
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   const onRefresh = React.useCallback(async () => {
@@ -102,300 +103,403 @@ export default function UsScreen() {
 
   const renderRightActions = (threadId: string) => {
     return (
-      <TouchableOpacity
-        onPress={() => confirmDelete(threadId)}
-        className="justify-center items-center px-6 rounded-r-2xl"
-        style={{ backgroundColor: '#EF4444' }}
-      >
-        <Text className="text-white font-semibold">Delete</Text>
-      </TouchableOpacity>
+      <View style={styles.deleteButton}>
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </View>
     );
   };
 
+  const ThreadCard = ({ children }: { children: React.ReactNode }) => (
+    <BlurView 
+      intensity={isDark ? 30 : 20}
+      tint={isDark ? 'dark' : 'light'}
+      style={styles.card}
+    >
+      <LinearGradient
+        colors={isDark 
+          ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] 
+          : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.05)']
+        }
+        style={StyleSheet.absoluteFill}
+      />
+      <View style={styles.cardContent}>
+        {children}
+      </View>
+    </BlurView>
+  );
+
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center" style={{ backgroundColor: isDark ? '#0F0F23' : '#F9FAFB' }}>
-        <ActivityIndicator size="large" color="#FF6B35" />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#a855f7" />
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View className="flex-1" style={{ backgroundColor: isDark ? '#0F0F23' : '#F9FAFB' }}>
-      {/* Header */}
-      <View 
-        className="pt-16 pb-6 px-6"
-        style={{
-          backgroundColor: isDark ? '#1a1a2e' : '#ffffff',
-          borderBottomWidth: 1,
-          borderBottomColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-        }}
-      >
-        <Text 
-          className="text-3xl font-bold"
-          style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-        >
-          Us
-        </Text>
-        <Text 
-          className="text-base mt-1"
-          style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
-        >
-          Shared questions and responses
-        </Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+      
+      <LinearGradient
+        colors={isDark 
+          ? ['#000000', '#0a0a0a', '#1a0a1f'] 
+          : ['#fafafa', '#ffffff', '#f5f3ff']
+        }
+        style={StyleSheet.absoluteFill}
+      />
 
       <ScrollView
-        className="flex-1"
-        contentContainerClassName="p-4"
+        showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B35" />
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#a855f7"
+          />
         }
       >
-        {threads.length === 0 ? (
-          <View className="flex-1 items-center justify-center py-20">
-            <Text className="text-6xl mb-4">💬</Text>
-            <Text 
-              className="text-xl font-semibold mb-2"
-              style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-            >
-              No shared questions yet
-            </Text>
-            <Text 
-              className="text-base text-center px-8"
-              style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
-            >
-              Long press on any question card to share it with someone
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.title, isDark && styles.titleDark]}>Us</Text>
+            <Text style={[styles.subtitle, isDark && styles.subtitleDark]}>
+              Shared questions and responses
             </Text>
           </View>
-        ) : (
-          threads.map((thread: any, index: number) => {
-            const otherPersonName = getOtherPersonName(thread);
-            const initials = getInitials(otherPersonName);
-            const isPending = thread.status === 'pending';
-            const isDeleting = deletingIds.has(thread.thread_id);
-            const response = thread.question_responses?.[0];
 
-            return (
-              <Swipeable
-                key={thread.thread_id || `thread-${index}`}
-                renderRightActions={() => renderRightActions(thread.thread_id)}
-                friction={2}
-                enabled={!isDeleting}
-              >
-                <Card
-                  className="mb-3"
-                  style={{
-                    opacity: isDeleting ? 0.5 : 1,
-                    backgroundColor: isDark ? '#1a1a2e' : '#ffffff',
-                  }}
+          {threads.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>💬</Text>
+              <Text style={[styles.emptyTitle, isDark && styles.emptyTitleDark]}>
+                No shared questions yet
+              </Text>
+              <Text style={[styles.emptySubtitle, isDark && styles.emptySubtitleDark]}>
+                Long press on any question card to share it with someone
+              </Text>
+            </View>
+          ) : (
+            threads.map((thread: any, index: number) => {
+              const otherPersonName = getOtherPersonName(thread);
+              const initials = getInitials(otherPersonName);
+              const isPending = thread.status === 'pending';
+              const isDeleting = deletingIds.has(thread.thread_id);
+              const response = thread.question_responses?.[0];
+
+              return (
+                <Swipeable
+                  key={thread.thread_id || `thread-${index}`}
+                  renderRightActions={() => renderRightActions(thread.thread_id)}
+                  friction={2}
+                  enabled={!isDeleting}
+                  onSwipeableOpen={() => confirmDelete(thread.thread_id)}
                 >
-                  {/* Pending Question - Simple Card */}
-                  {isPending ? (
-                    <TouchableOpacity
-                      onPress={() => router.push(`/threads/${thread.thread_id}`)}
-                      activeOpacity={0.7}
-                      disabled={isDeleting}
-                    >
-                      <View className="p-4">
-                        <View className="flex-row items-center justify-between mb-3">
-                          {/* Avatar */}
-                          <View className="flex-row items-center flex-1">
-                            <View
-                              className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                              style={{
-                                backgroundColor: isDark ? '#2d2d4a' : '#e5e7eb',
-                              }}
-                            >
-                              <Text
-                                className="text-lg font-bold"
-                                style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-                              >
-                                {initials}
-                              </Text>
-                            </View>
+                  <ThreadCard>
+                    <View style={[styles.threadContent, isDeleting && styles.threadDeleting]}>
+                      {/* Header: Avatar + Name + Badge */}
+                      <View style={styles.threadHeader}>
+                        {/* Gradient Avatar */}
+                        <LinearGradient
+                          colors={['#f97316', '#ec4899', '#a855f7']}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.avatar}
+                        >
+                          <Text style={styles.avatarText}>{initials}</Text>
+                        </LinearGradient>
 
-                            <View className="flex-1">
-                              <Text
-                                className="text-lg font-semibold mb-1"
-                                style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-                              >
-                                {otherPersonName}
-                              </Text>
-                              <Text
-                                className="text-xs"
-                                style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}
-                              >
-                                {thread.questions?.question_decks?.name || 'Question'} · {new Date(thread.created_at).toLocaleDateString()}
+                        <View style={styles.threadInfo}>
+                          <View style={styles.nameRow}>
+                            <Text style={[styles.name, isDark && styles.nameDark]}>
+                              {otherPersonName}
+                            </Text>
+                            
+                            {/* Status Badge */}
+                            <View style={[
+                              styles.badge,
+                              isPending 
+                                ? (isSender(thread) ? styles.badgeWaiting : styles.badgeNew)
+                                : styles.badgeAnswered
+                            ]}>
+                              <Text style={[
+                                styles.badgeText,
+                                isPending 
+                                  ? (isSender(thread) ? styles.badgeTextWaiting : styles.badgeTextNew)
+                                  : styles.badgeTextAnswered
+                              ]}>
+                                {isPending 
+                                  ? (isSender(thread) ? 'Waiting' : 'New')
+                                  : 'Answered'}
                               </Text>
                             </View>
                           </View>
-
-                          {/* Status Badge */}
-                          <Chip 
-                            size="sm"
-                            style={{
-                              backgroundColor: isSender(thread) ? '#9CA3AF20' : '#FF6B3520',
-                              borderColor: isSender(thread) ? '#9CA3AF' : '#FF6B35',
-                            }}
-                          >
-                            <Text
-                              className="text-xs font-semibold"
-                              style={{ color: isSender(thread) ? '#9CA3AF' : '#FF6B35' }}
-                            >
-                              {isSender(thread) ? 'Waiting' : 'New'}
-                            </Text>
-                          </Chip>
+                          
+                          <Text style={[styles.metadata, isDark && styles.metadataDark]}>
+                            {thread.questions?.question_decks?.name || 'Question'} · {new Date(thread.created_at).toLocaleDateString()}
+                          </Text>
                         </View>
+                      </View>
 
-                        {/* Question Text */}
-                        <View
-                          className="p-3 rounded-xl"
-                          style={{
-                            backgroundColor: isDark ? '#16162a' : '#f9fafb',
-                          }}
-                        >
-                          <Text
-                            className="text-sm leading-5"
-                            style={{ color: isDark ? '#e5e5e5' : '#4b5563' }}
-                            numberOfLines={2}
-                          >
+                      {/* Question */}
+                      <View style={styles.section}>
+                        <Text style={[styles.sectionLabel, isDark && styles.sectionLabelDark]}>
+                          QUESTION
+                        </Text>
+                        <View style={[styles.textBox, isDark && styles.textBoxDark]}>
+                          <Text style={[styles.questionText, isDark && styles.questionTextDark]}>
                             {thread.questions?.text}
                           </Text>
                         </View>
                       </View>
-                    </TouchableOpacity>
-                  ) : (
-                    /* Answered Question - Accordion */
-                    <Accordion
-                      type="single"
-                      className="border-0"
-                      style={{ backgroundColor: 'transparent' }}
-                    >
-                      <Accordion.Item value={`thread-${thread.thread_id}`}>
-                        <Accordion.Header className="px-4 pt-4 pb-2">
-                          <View className="flex-row items-center justify-between flex-1">
-                            {/* Avatar */}
-                            <View className="flex-row items-center flex-1">
-                              <View
-                                className="w-12 h-12 rounded-full items-center justify-center mr-3"
-                                style={{
-                                  backgroundColor: isDark ? '#2d2d4a' : '#e5e7eb',
-                                }}
-                              >
-                                <Text
-                                  className="text-lg font-bold"
-                                  style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-                                >
-                                  {initials}
-                                </Text>
-                              </View>
 
-                              <View className="flex-1">
-                                <Text
-                                  className="text-lg font-semibold mb-1"
-                                  style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-                                >
-                                  {otherPersonName}
-                                </Text>
-                                <Text
-                                  className="text-xs"
-                                  style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}
-                                >
-                                  {thread.questions?.question_decks?.name || 'Question'} · {new Date(thread.created_at).toLocaleDateString()}
-                                </Text>
-                              </View>
-                            </View>
-
-                            {/* Answered Badge */}
-                            <Chip 
-                              size="sm"
-                              style={{
-                                backgroundColor: '#10B98120',
-                                borderColor: '#10B981',
-                                marginRight: 8,
-                              }}
-                            >
-                              <Text
-                                className="text-xs font-semibold"
-                                style={{ color: '#10B981' }}
-                              >
-                                Answered
-                              </Text>
-                            </Chip>
-                          </View>
-                        </Accordion.Header>
-
-                        <Accordion.Content className="px-4 pb-4">
-                          {/* Question */}
-                          <View className="mb-3">
-                            <Text
-                              className="text-xs font-semibold mb-2"
-                              style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
-                            >
-                              QUESTION
+                      {/* Response (if answered) */}
+                      {!isPending && response && (
+                        <View style={styles.section}>
+                          <Text style={[styles.sectionLabel, isDark && styles.sectionLabelDark]}>
+                            RESPONSE
+                          </Text>
+                          <View style={[styles.responseBox, isDark && styles.responseBoxDark]}>
+                            <Text style={[styles.responseText, isDark && styles.responseTextDark]}>
+                              {response.response_text}
                             </Text>
-                            <View
-                              className="p-3 rounded-xl"
-                              style={{
-                                backgroundColor: isDark ? '#16162a' : '#f9fafb',
-                              }}
-                            >
-                              <Text
-                                className="text-sm leading-5"
-                                style={{ color: isDark ? '#e5e5e5' : '#4b5563' }}
-                              >
-                                {thread.questions?.text}
-                              </Text>
-                            </View>
+                            <Text style={[styles.timestamp, isDark && styles.timestampDark]}>
+                              {new Date(response.created_at).toLocaleDateString()} at{' '}
+                              {new Date(response.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </Text>
                           </View>
-
-                          {/* Response */}
-                          {response && (
-                            <View>
-                              <Text
-                                className="text-xs font-semibold mb-2"
-                                style={{ color: isDark ? '#9CA3AF' : '#6B7280' }}
-                              >
-                                RESPONSE
-                              </Text>
-                              <View
-                                className="p-3 rounded-xl"
-                                style={{
-                                  backgroundColor: isDark ? '#1a1a2e' : '#ffffff',
-                                  borderWidth: 1,
-                                  borderColor: isDark ? '#10B98140' : '#10B98120',
-                                }}
-                              >
-                                <Text
-                                  className="text-sm leading-5 mb-2"
-                                  style={{ color: isDark ? '#ffffff' : '#1a1a1a' }}
-                                >
-                                  {response.response_text}
-                                </Text>
-                                <Text
-                                  className="text-xs"
-                                  style={{ color: isDark ? '#6B7280' : '#9CA3AF' }}
-                                >
-                                  {new Date(response.created_at).toLocaleDateString()} at{' '}
-                                  {new Date(response.created_at).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </Text>
-                              </View>
-                            </View>
-                          )}
-                        </Accordion.Content>
-                      </Accordion.Item>
-                    </Accordion>
-                  )}
-                </Card>
-              </Swipeable>
-            );
-          })
-        )}
+                        </View>
+                      )}
+                    </View>
+                  </ThreadCard>
+                </Swipeable>
+              );
+            })
+          )}
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  titleDark: {
+    color: '#ffffff',
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#6b7280',
+  },
+  subtitleDark: {
+    color: '#9ca3af',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 32,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  emptyTitleDark: {
+    color: '#ffffff',
+  },
+  emptySubtitle: {
+    fontSize: 15,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  emptySubtitleDark: {
+    color: '#9ca3af',
+  },
+  card: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 16,
+  },
+  cardContent: {
+    padding: 20,
+  },
+  threadContent: {
+    gap: 16,
+  },
+  threadDeleting: {
+    opacity: 0.5,
+  },
+  threadHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#a855f7',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  avatarText: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  threadInfo: {
+    flex: 1,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  name: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  nameDark: {
+    color: '#ffffff',
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  badgeWaiting: {
+    backgroundColor: 'rgba(156, 163, 175, 0.15)',
+  },
+  badgeNew: {
+    backgroundColor: 'rgba(255, 107, 53, 0.15)',
+  },
+  badgeAnswered: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  badgeTextWaiting: {
+    color: '#9ca3af',
+  },
+  badgeTextNew: {
+    color: '#FF6B35',
+  },
+  badgeTextAnswered: {
+    color: '#10b981',
+  },
+  metadata: {
+    fontSize: 13,
+    color: '#9ca3af',
+  },
+  metadataDark: {
+    color: '#6b7280',
+  },
+  section: {
+    gap: 8,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#9ca3af',
+    letterSpacing: 0.5,
+  },
+  sectionLabelDark: {
+    color: '#6b7280',
+  },
+  textBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    padding: 12,
+    borderRadius: 12,
+  },
+  textBoxDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  questionText: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#374151',
+  },
+  questionTextDark: {
+    color: '#e5e7eb',
+  },
+  responseBox: {
+    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  responseBoxDark: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  responseText: {
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#111827',
+    marginBottom: 8,
+  },
+  responseTextDark: {
+    color: '#ffffff',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  timestampDark: {
+    color: '#6b7280',
+  },
+  deleteButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 24,
+    marginBottom: 16,
+    borderTopRightRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  deleteButtonText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
