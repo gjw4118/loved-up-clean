@@ -1,4 +1,4 @@
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { Icon, Label, NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 
@@ -17,8 +17,8 @@ export default function TabLayout() {
       </NativeTabs.Trigger>
       
       <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: 'gear', selected: 'gear.fill' }} />
-        <Label>Settings</Label>
+        <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
+        <Label>You</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
