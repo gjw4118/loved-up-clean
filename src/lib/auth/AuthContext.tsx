@@ -7,7 +7,7 @@ import { User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // Development bypass flag - set to true to skip Supabase initialization
-const DEV_BYPASS_AUTH = true;
+const DEV_BYPASS_AUTH = false;
 
 interface AuthContextType {
   user: User | null;
