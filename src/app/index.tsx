@@ -8,7 +8,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 
 // Development bypass flag - set to true to skip authentication
-const DEV_BYPASS_AUTH = true;
+const DEV_BYPASS_AUTH = false;
 
 export default function IndexScreen() {
   const { user, loading } = useAuth();
@@ -23,8 +23,8 @@ export default function IndexScreen() {
       });
 
       if (!loading) {
-        // DEV: Always show onboarding for testing
-        const seenOnboarding = false; // await hasSeenOnboarding();
+        const { hasSeenOnboarding } = await import('@/lib/storage/onboarding');
+        const seenOnboarding = await hasSeenOnboarding();
         setCheckingOnboarding(false);
 
         if (!seenOnboarding) {
