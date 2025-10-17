@@ -25,22 +25,45 @@ export const signInWithApple = async () => {
     }
 
     // Update user profile with Apple data if available
-    if (credential.fullName && data.user) {
-      const displayName = [
-        credential.fullName.givenName,
-        credential.fullName.familyName,
-      ]
-        .filter(Boolean)
-        .join(' ');
+    // Apple only provides fullName on first sign-in, so capture it immediately
+    if (data.user) {
+      const profileData: any = {
+        user_id: data.user.id,
+        email: data.user.email!,
+      };
 
-      if (displayName) {
-        await supabase
-          .from('user_profiles')
-          .upsert({
-            id: data.user.id,
-            display_name: displayName,
-            email: data.user.email!,
-          });
+      // Capture Apple name data if available (only on first sign-in)
+      if (credential.fullName) {
+        const firstName = credential.fullName.givenName;
+        const lastName = credential.fullName.familyName;
+        const displayName = [firstName, lastName].filter(Boolean).join(' ');
+
+        if (firstName) profileData.first_name = firstName;
+        if (lastName) profileData.last_name = lastName;
+        if (displayName) profileData.display_name = displayName;
+
+        console.log('🍎 Apple Sign-In: Captured name data:', {
+          firstName,
+          lastName,
+          displayName,
+        });
+      } else {
+        // Fallback to email-based display name if no name provided
+        profileData.display_name = data.user.email?.split('@')[0] || 'User';
+        console.log('🍎 Apple Sign-In: No name provided, using email fallback');
+      }
+
+      // Upsert profile with Apple data
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert(profileData, {
+          onConflict: 'user_id',
+        });
+
+      if (profileError) {
+        console.error('Error updating profile with Apple data:', profileError);
+      } else {
+        console.log('✅ Profile updated with Apple Sign-In data');
       }
     }
 

@@ -168,7 +168,7 @@ export default function YouScreen() {
               <View style={styles.userInfo}>
                 <View style={styles.userTextContainer}>
                   <Text style={[styles.name, isDark && styles.nameDark]}>
-                    {profile?.first_name || profile?.display_name || user?.email?.split('@')[0] || 'User'}
+                    {profile?.display_name || profile?.first_name || user?.email?.split('@')[0] || 'User'}
                   </Text>
                   <Text style={[styles.email, isDark && styles.emailDark]}>
                     {user?.email}
