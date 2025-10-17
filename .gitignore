@@ -16,6 +16,10 @@ web-build/
 *.key
 *.mobileprovision
 
+# CNG/Prebuild - native folders generated from app.json
+/ios
+/android
+
 # Metro
 .metro-health-check*
 

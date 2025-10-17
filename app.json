@@ -18,6 +18,10 @@
       "bundleIdentifier": "com.lovedup.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.developer.applesignin": ["Default"],
+        "aps-environment": "development"
       }
     },
     "android": {
@@ -37,7 +41,18 @@
       "expo-router",
       "expo-apple-authentication",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "newArchEnabled": true
+          },
+          "android": {
+            "newArchEnabled": true
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
