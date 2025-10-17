@@ -17,7 +17,7 @@ interface GenerateQuestionsRequest {
 
 interface GeneratedQuestion {
   text: string;
-  difficulty_level: 'easy' | 'medium' | 'hard';
+  depth_level: 'standard' | 'deeper';
   tags: string[];
 }
 
@@ -124,7 +124,7 @@ export async function saveGeneratedQuestions(
   const questionsToInsert = questions.map(q => ({
     deck_id: deckId,
     text: q.text,
-    difficulty_level: q.difficulty_level,
+    depth_level: q.depth_level,
     tags: q.tags,
     is_active: true,
   }));

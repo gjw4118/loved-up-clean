@@ -51,22 +51,28 @@ export default function AuthScreen() {
 
   const handleAppleSignIn = async () => {
     try {
+      console.log('🍎 AuthScreen: Starting Apple Sign-In...');
       setLoading(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       
       const { data, error } = await signInWithApple();
       
       if (error) {
+        console.error('❌ AuthScreen: Apple Sign-In error:', error);
         Alert.alert('Sign In Error', 'Failed to sign in with Apple. Please try again.');
         return;
       }
 
       if (data?.user) {
+        console.log('✅ AuthScreen: Apple Sign-In successful for user:', data.user.id);
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        console.log('🚀 AuthScreen: Navigating to tabs...');
         router.replace('/(tabs)');
+      } else {
+        console.log('⚠️ AuthScreen: Apple Sign-In completed but no user data');
       }
     } catch (error) {
-      console.error('Apple Sign-In Error:', error);
+      console.error('❌ AuthScreen: Apple Sign-In Error:', error);
       Alert.alert('Sign In Error', 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

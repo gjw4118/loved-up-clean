@@ -1,10 +1,12 @@
 import { useQuestionCardAnimation } from '@/lib/contexts/QuestionCardAnimationContext';
 import { useQuestionStackAnimation } from '@/lib/contexts/QuestionStackAnimationContext';
 import { Question } from '@/types/questions';
-import React, { FC, memo } from 'react';
+import React, { FC, memo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
     interpolate,
+    runOnJS,
+    useAnimatedReaction,
     useAnimatedStyle
 } from 'react-native-reanimated';
 import QuestionCard from './QuestionCard';
@@ -31,11 +33,10 @@ const CardContainer: FC<CardContainerProps> = memo(({ question, index, deckCateg
   const { panX, panY, absoluteYAnchor, panDistance } = useQuestionCardAnimation();
 
   const containerStyle = useAnimatedStyle(() => {
-    // Compute neighbors relative to the active index to limit work to only visible cards
+    // Two-card system: only show current card and next card
     const isCurrent = index === currentQuestionIndex.value;
     const isNext = index === currentQuestionIndex.value + 1;
-    const isNextNext = index === currentQuestionIndex.value + 2;
-
+    
     // Calculate depth offset for stacking effect
     const depthOffset = index - animatedQuestionIndex.value;
     
@@ -47,14 +48,28 @@ const CardContainer: FC<CardContainerProps> = memo(({ question, index, deckCateg
     const sign = absoluteYAnchor.value > height / 2 ? -1 : 1;
     const rotate = isCurrent ? interpolate(panX.value, [0, panDistance], [0, sign * 4]) : 0;
 
-    // Stack effect: cards behind the current card are offset down and scaled down
-    const stackOffset = depthOffset > 0 ? Math.min(depthOffset * 12, 24) : 0;
-    const stackScale = depthOffset > 0 ? 1 - Math.min(depthOffset * 0.03, 0.06) : 1;
+    // Stack effect: bottom card is slightly offset down and scaled down
+    const stackOffset = depthOffset > 0 ? 12 : 0;
+    const stackScale = depthOffset > 0 ? 0.97 : 1;
+    
+    // Swipe-based fade in: next card only appears after 50% swipe
+    let opacity = 0;
+    if (isCurrent) {
+      opacity = 1;
+    } else if (isNext) {
+      // Calculate swipe progress (0 to 1)
+      const swipeProgress = Math.abs(panX.value) / (panDistance * 2);
+      // Only fade in after 50% swipe
+      if (swipeProgress > 0.5) {
+        opacity = interpolate(swipeProgress, [0.5, 1], [0, 1]);
+      } else {
+        opacity = 0;
+      }
+    }
 
     return {
-      // Show current card and next 2 cards
-      opacity: isCurrent || isNext || isNextNext ? 1 : 0,
-      zIndex: isCurrent ? 100 : 50 - depthOffset,
+      opacity,
+      zIndex: isCurrent ? 100 : 50,
       transform: [
         {
           translateX,
@@ -100,21 +115,32 @@ export const QuestionCardStack: FC<QuestionCardStackProps> = ({
   deckCategory,
 }) => {
   const { currentQuestionIndex } = useQuestionStackAnimation();
+  const [currentIdx, setCurrentIdx] = useState(0);
 
-  // Get visible cards (current + next 2 cards)
+  // Use animated reaction to sync state with shared value
+  useAnimatedReaction(
+    () => currentQuestionIndex.value,
+    (value) => {
+      runOnJS(setCurrentIdx)(Math.floor(value));
+    },
+    [currentQuestionIndex]
+  );
+
+  // Two-card system: only render current card and next card
   const visibleQuestions = questions.slice(
-    currentQuestionIndex.value,
-    Math.min(questions.length, currentQuestionIndex.value + 3)
+    currentIdx,
+    Math.min(questions.length, currentIdx + 2)
   );
 
   return (
     <View style={styles.stackContainer}>
       {visibleQuestions.map((question, idx) => {
         // Calculate actual index in full array
-        const actualIndex = currentQuestionIndex.value + idx;
+        const actualIndex = currentIdx + idx;
+        
         return (
           <CardContainer
-            key={`card-${question.id}`}
+            key={`card-${question.id}-${actualIndex}`}
             question={question}
             index={actualIndex}
             deckCategory={deckCategory}

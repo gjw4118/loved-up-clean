@@ -1,11 +1,12 @@
 // Question Browsing Screen
 // Displays questions from selected deck with Slack-style swipeable card stack
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect } from 'react';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Animated, Pressable, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { QuestionCardStack } from '@/components/cards/QuestionCardStack';
@@ -18,7 +19,7 @@ import { QuestionCardAnimationProvider } from '@/lib/contexts/QuestionCardAnimat
 import { QuestionStackAnimationProvider } from '@/lib/contexts/QuestionStackAnimationContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useQuestionStore } from '@/stores/questionStore';
-import { Question, QuestionDeck } from '@/types/questions';
+import { DepthLevel, Question, QuestionDeck } from '@/types/questions';
 
 export default function QuestionBrowsingScreen() {
   const { deckId, deckName } = useLocalSearchParams<{
@@ -31,6 +32,14 @@ export default function QuestionBrowsingScreen() {
   
   // Safety check for isDark
   const safeIsDark = isDark || false;
+
+  // Depth level toggle state
+  const [depthLevel, setDepthLevel] = useState<DepthLevel>(DepthLevel.STANDARD);
+  
+  // Swipe hint state
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const hintOpacity = useRef(new Animated.Value(0)).current;
+  const SWIPE_HINT_KEY = '@hasSeenSwipeHint';
 
   // Fetch data from Supabase
   const { data: decks, isLoading: decksLoading } = useQuestionDecks();
@@ -50,21 +59,24 @@ export default function QuestionBrowsingScreen() {
   // Ensure gradient is always valid
   const gradientColors = deckColors?.gradient || ['#FF6B35', '#F7931E'];
 
+  // Filter questions by depth level
+  const depthFilteredQuestions = allQuestions?.filter(q => q.depth_level === depthLevel) || [];
+
   // Freemium logic
   const FREE_QUESTIONS_LIMIT = 5;
   const isSpiceDeck = deck?.category === 'spice';
   const availableQuestions = isPremium
-    ? allQuestions || []
-    : allQuestions?.slice(0, FREE_QUESTIONS_LIMIT) || [];
+    ? depthFilteredQuestions
+    : depthFilteredQuestions.slice(0, FREE_QUESTIONS_LIMIT);
 
-  const hasHitLimit = !(isPremium || false) && (allQuestions?.length || 0) > FREE_QUESTIONS_LIMIT;
+  const hasHitLimit = !(isPremium || false) && depthFilteredQuestions.length > FREE_QUESTIONS_LIMIT;
 
   // Test data fallback
   const testQuestion: Question = {
     id: 'test-question',
     text: 'What is one thing you appreciate most about our relationship?',
     deck_id: deckId || 'test-deck',
-    difficulty_level: 'medium' as const,
+    depth_level: depthLevel,
     tags: ['relationships', 'appreciation'],
     completion_rate: 0.0,
     skip_rate: 0.0,
@@ -107,31 +119,85 @@ export default function QuestionBrowsingScreen() {
     hasMoreQuestions,
   } = useQuestionStore();
 
-  // Initialize session when questions load
+  // Check if user has seen swipe hint before
+  useEffect(() => {
+    const checkSwipeHint = async () => {
+      try {
+        const hasSeenHint = await AsyncStorage.getItem(SWIPE_HINT_KEY);
+        if (!hasSeenHint) {
+          setShowSwipeHint(true);
+          // Fade in the hint
+          Animated.timing(hintOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start();
+        }
+      } catch (error) {
+        console.error('Error checking swipe hint:', error);
+      }
+    };
+    checkSwipeHint();
+  }, []);
+
+  // Hide swipe hint on first interaction
+  const hideSwipeHint = async () => {
+    if (showSwipeHint) {
+      Animated.timing(hintOpacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowSwipeHint(false);
+      });
+      
+      try {
+        await AsyncStorage.setItem(SWIPE_HINT_KEY, 'true');
+      } catch (error) {
+        console.error('Error saving swipe hint:', error);
+      }
+    }
+  };
+
+  // Initialize session when deck loads
   useEffect(() => {
     // Clear existing session if it's for a different deck
     if (currentSession && currentSession.deckId !== deckId) {
       endSession();
+      return; // Early return to prevent starting new session in same render
     }
 
-    // Debug logging temporarily disabled
-    // console.log('Questions screen effect:', {
-    //   availableQuestions: availableQuestions?.length,
-    //   deck,
-    //   currentSession,
-    //   deckId
-    // });
-
-    if (finalAvailableQuestions && finalAvailableQuestions.length > 0 && deck && (!currentSession || currentSession.deckId !== deckId)) {
+    // Start new session if we have questions and deck
+    if (finalAvailableQuestions && finalAvailableQuestions.length > 0 && deck && !currentSession) {
       console.log('Starting session with questions:', {
         deckId: deck.id,
+        depthLevel,
         questionsLength: finalAvailableQuestions.length,
         firstQuestionId: finalAvailableQuestions[0]?.id,
         firstQuestionText: finalAvailableQuestions[0]?.text?.substring(0, 50)
       });
       startSession(deck, finalAvailableQuestions);
     }
-  }, [finalAvailableQuestions, deck, currentSession, startSession, endSession, deckId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [finalAvailableQuestions, deck, deckId]);
+
+  // Handle depth level changes - restart session with new questions
+  useEffect(() => {
+    // Only restart if we already have an active session
+    if (currentSession && finalAvailableQuestions && finalAvailableQuestions.length > 0 && deck) {
+      console.log('Depth level changed, restarting session:', {
+        deckId: deck.id,
+        depthLevel,
+        questionsLength: finalAvailableQuestions.length,
+      });
+      endSession();
+      // Use setTimeout to ensure state update completes before starting new session
+      setTimeout(() => {
+        startSession(deck, finalAvailableQuestions);
+      }, 0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depthLevel]);
 
   // Show loading state
   if (isLoading) {
@@ -162,9 +228,8 @@ export default function QuestionBrowsingScreen() {
           </Text>
           <GlassButton
             onPress={() => router.back()}
-            style={{ paddingHorizontal: 24, paddingVertical: 12 }}
           >
-            <Text style={{ color: colors.text, fontWeight: '600' }}>Go Back</Text>
+            <Text style={{ color: colors.text, fontWeight: '600', paddingHorizontal: 24, paddingVertical: 12 }}>Go Back</Text>
           </GlassButton>
         </View>
       </SafeAreaView>
@@ -261,21 +326,8 @@ export default function QuestionBrowsingScreen() {
 
   // Handle back navigation
   const handleBack = () => {
-    Alert.alert(
-      'Leave Session?',
-      'Your progress will be saved, but you\'ll exit the current session.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Leave',
-          style: 'destructive',
-          onPress: () => {
-            endSession();
-            router.back();
-          },
-        },
-      ]
-    );
+    endSession();
+    router.back();
   };
 
   // Loading state (only for premium status)
@@ -365,31 +417,20 @@ export default function QuestionBrowsingScreen() {
     );
   }
 
-  // Get questions for the card stack (show up to 3 cards)
-  const getStackQuestions = () => {
-    if (!currentSession || !currentSession.questions.length) return [testQuestion];
-
-    const startIndex = Math.max(0, currentSession.currentQuestionIndex - 1);
-    const endIndex = Math.min(currentSession.questions.length, startIndex + 3);
-    return currentSession.questions.slice(startIndex, endIndex);
-  };
-
-  const stackQuestions = getStackQuestions();
   const displayQuestion = currentQuestion || testQuestion;
 
-  const progress = getProgress();
-  const questionNumber = getCurrentQuestionNumber();
-
-  // Safety checks for progress calculation
-  const safeProgressTotal = progress?.total || 1;
-  const safeQuestionNumber = questionNumber || 1;
+  // Fix progress calculation to show current position
+  const currentIndex = currentSession?.currentQuestionIndex ?? 0;
+  const safeQuestionNumber = currentIndex + 1;
+  const safeProgressTotal = finalAvailableQuestions.length;
 
   // Debug logging for question navigation
   console.log('Questions screen render:', {
     currentQuestionId: currentQuestion?.id,
     currentQuestionText: currentQuestion?.text?.substring(0, 50),
-    progress,
-    questionNumber,
+    currentIndex,
+    safeQuestionNumber,
+    safeProgressTotal,
     hasCurrentQuestion: !!currentQuestion,
     hasDisplayQuestion: !!displayQuestion
   });
@@ -406,7 +447,7 @@ export default function QuestionBrowsingScreen() {
       <View className={`absolute inset-0 ${safeIsDark ? 'bg-white/5' : 'bg-black/5'}`} />
       <StatusBar style={safeIsDark ? 'light' : 'dark'} />
 
-      {/* Header */}
+      {/* Header - Minimal with Native Toggle */}
       <View className="flex-row items-center justify-between px-6 py-4">
         <Pressable
           onPress={handleBack}
@@ -419,30 +460,29 @@ export default function QuestionBrowsingScreen() {
           <Text className="font-bold text-base text-gray-800 dark:text-white">← Back</Text>
         </Pressable>
 
-        <View className="items-center flex-1 mx-4">
-          <Text className="font-bold text-lg mb-1 text-gray-800 dark:text-white">
-            {deck?.name || 'Loading...'}
-          </Text>
-          <Text className="text-sm font-medium text-gray-600 dark:text-gray-300">
-            {safeQuestionNumber} of {safeProgressTotal}
-            {(hasHitLimit || false) && !(isPremium || false) ? ` (Free: ${FREE_QUESTIONS_LIMIT || 5}/${allQuestions?.length || 0})` : ''}
-          </Text>
-          {stackQuestions.length > 1 && (
-            <Text className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-1">
-              +{stackQuestions.length - 1} {stackQuestions.length - 1 === 1 ? 'card' : 'cards'} ready
-            </Text>
-          )}
-        </View>
+        {/* Spacer */}
+        <View className="flex-1" />
 
-        <View className="w-20" />
-      </View>
-
-      {/* Progress Bar */}
-      <View className="px-6 mb-4">
-        <View className={`backdrop-blur-sm rounded-full h-2 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
-          <View
-            className={`rounded-full h-2 transition-all duration-500 ${safeIsDark ? 'bg-white' : 'bg-gray-800'}`}
-            style={{ width: `${(safeQuestionNumber / safeProgressTotal) * 100}%` }}
+        {/* Native Depth Toggle */}
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Text 
+            className="text-sm font-medium"
+            style={{ color: safeIsDark ? '#FFFFFF' : '#1F2937' }}
+          >
+            Deeper?
+          </Text>
+          <Switch
+            value={depthLevel === DepthLevel.DEEPER}
+            onValueChange={async (value) => {
+              await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setDepthLevel(value ? DepthLevel.DEEPER : DepthLevel.STANDARD);
+            }}
+            trackColor={{ 
+              false: safeIsDark ? '#4B5563' : '#D1D5DB', 
+              true: safeIsDark ? '#3B82F6' : '#2563EB' 
+            }}
+            thumbColor={safeIsDark ? '#F9FAFB' : '#FFFFFF'}
+            ios_backgroundColor={safeIsDark ? '#4B5563' : '#D1D5DB'}
           />
         </View>
       </View>
@@ -450,7 +490,7 @@ export default function QuestionBrowsingScreen() {
       {/* Question Card Stack - New Slack-style implementation */}
       <View className="flex-1 mt-4" style={{ backgroundColor: 'transparent' }}>
         <QuestionStackAnimationProvider totalQuestions={finalAvailableQuestions.length}>
-          <QuestionCardAnimationProvider>
+          <QuestionCardAnimationProvider onSwipe={hideSwipeHint}>
             <View className="items-center justify-center flex-1 px-6" style={{ backgroundColor: 'transparent' }}>
               <QuestionCardStack
                 questions={finalAvailableQuestions}
@@ -461,17 +501,23 @@ export default function QuestionBrowsingScreen() {
         </QuestionStackAnimationProvider>
       </View>
 
-      {/* Swipe Hint - Elegant design */}
-      <View className="px-6 pb-8">
-        <View className={`backdrop-blur-sm rounded-full py-4 px-8 border ${safeIsDark ? 'bg-white/20 border-white/20' : 'bg-white/60 border-white/20'}`}>
-          <Text 
-            className="text-center text-base font-medium text-gray-600 dark:text-gray-300"
-            style={{ fontWeight: '400' }}
-          >
-            Swipe left to skip • Swipe right to complete
-          </Text>
-        </View>
-      </View>
+      {/* Swipe Hint - First Time Only (Floating) */}
+      {showSwipeHint && (
+        <Animated.View 
+          className="absolute bottom-24 left-6 right-6"
+          style={{ opacity: hintOpacity }}
+          pointerEvents="none"
+        >
+          <View className={`backdrop-blur-sm rounded-full py-4 px-8 border shadow-lg ${safeIsDark ? 'bg-white/30 border-white/30' : 'bg-white/80 border-white/30'}`}>
+            <Text 
+              className="text-center text-base font-medium text-gray-800 dark:text-white"
+              style={{ fontWeight: '500' }}
+            >
+              Swipe left to skip • Swipe right to complete
+            </Text>
+          </View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }

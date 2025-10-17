@@ -4,9 +4,9 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { ActivityIndicator, Text, useWindowDimensions, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DeckBentoCard } from '@/components/cards';
 import { StatusBar } from '@/components/ui';
@@ -27,15 +27,46 @@ const createDeckList = (dbDecks: any[]) => {
 
 export default function MainDecksScreen() {
   const { theme, isDark } = useTheme();
+  const [navigatingToDeck, setNavigatingToDeck] = useState<string | null>(null);
+  const { height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   
+  console.log('📚 MainDecksScreen: Component rendered');
   
   // Fetch decks from database
   const { data: dbDecks, isLoading: decksLoading } = useQuestionDecks();
+  
+  console.log('📚 MainDecksScreen: Decks loading state:', decksLoading, 'Decks count:', dbDecks?.length);
   
   // Combine database decks with static Spice deck
   const decks = createDeckList(dbDecks || []);
   const { isPremium } = usePremiumStatus();
   const { isPresenting, presentPaywall } = usePaywall();
+
+  // Calculate available height for cards (excluding safe areas and tab bar)
+  const TAB_BAR_HEIGHT = 90; // Approximate tab bar height
+  const VERTICAL_PADDING = 16; // Top and bottom padding
+  const availableHeight = screenHeight - insets.top - insets.bottom - TAB_BAR_HEIGHT - VERTICAL_PADDING;
+  
+  // Calculate dynamic heights for rows with gaps (12px between rows)
+  const ROW_GAP = 12;
+  const totalGaps = 2 * ROW_GAP; // 2 gaps between 3 rows
+  const usableHeight = availableHeight - totalGaps;
+  
+  // Row distribution: Row 1 (25%), Row 2 (40%), Row 3 (35%)
+  const row1Height = Math.floor(usableHeight * 0.25);
+  const row2Height = Math.floor(usableHeight * 0.40);
+  const row3Height = Math.floor(usableHeight * 0.35);
+
+  console.log('📐 Responsive Bento Grid Calculated Heights:', {
+    screenHeight,
+    availableHeight,
+    usableHeight,
+    row1Height,
+    row2Height,
+    row3Height,
+    totalCalculated: row1Height + row2Height + row3Height + totalGaps,
+  });
 
   const handleDeckSelect = async (deck: any) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,11 +79,16 @@ export default function MainDecksScreen() {
     
     console.log('Navigating to deck:', { deckId: deck.id, deckName: deck.name });
     
-    // Navigate to question browsing screen
-    router.push({
-      pathname: '/questions/[deckId]',
-      params: { deckId: deck.id, deckName: deck.name }
-    });
+    // Set loading state to prevent visual glitches
+    setNavigatingToDeck(deck.id);
+    
+    // Small delay to allow press animation to complete smoothly
+    setTimeout(() => {
+      router.push({
+        pathname: '/questions/[deckId]',
+        params: { deckId: deck.id, deckName: deck.name }
+      });
+    }, 100);
   };
 
   // Show loading state while fetching decks
@@ -88,17 +124,103 @@ export default function MainDecksScreen() {
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
       
-      <ScrollView 
+      <View 
         className="flex-1"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
+        style={{
           paddingHorizontal: 16,
           paddingTop: 8,
-          paddingBottom: 32,
+          paddingBottom: 8,
         }}
       >
-        {/* Premium Bento Grid Layout - Full Screen */}
-        {decks && decks.length >= 5 && (
+        {/* Responsive Bento Grid Layout - 7 Decks (Fills Screen) */}
+        {decks && decks.length >= 7 && (
+          <View style={{ flex: 1, gap: ROW_GAP }}>
+            {/* Row 1 (Top): Two medium cards - 25% height */}
+            <View style={{ flexDirection: 'row', gap: 12, height: row1Height }}>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[0]}
+                  onPress={() => handleDeckSelect(decks[0])}
+                  size="custom"
+                  customHeight={row1Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[0].id}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[1]}
+                  onPress={() => handleDeckSelect(decks[1])}
+                  size="custom"
+                  customHeight={row1Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[1].id}
+                />
+              </View>
+            </View>
+
+            {/* Row 2 (Center): One small + One large featured card - 40% height */}
+            <View style={{ flexDirection: 'row', gap: 12, height: row2Height }}>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[2]}
+                  onPress={() => handleDeckSelect(decks[2])}
+                  size="custom"
+                  customHeight={row2Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[2].id}
+                />
+              </View>
+              <View style={{ flex: 2 }}>
+                <DeckBentoCard
+                  deck={decks[3]}
+                  onPress={() => handleDeckSelect(decks[3])}
+                  size="custom"
+                  customHeight={row2Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[3].id}
+                />
+              </View>
+            </View>
+
+            {/* Row 3 (Bottom): Three small cards - 35% height */}
+            <View style={{ flexDirection: 'row', gap: 12, height: row3Height }}>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[4]}
+                  onPress={() => handleDeckSelect(decks[4])}
+                  size="custom"
+                  customHeight={row3Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[4].id}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[5]}
+                  onPress={() => handleDeckSelect(decks[5])}
+                  size="custom"
+                  customHeight={row3Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[5].id}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <DeckBentoCard
+                  deck={decks[6]}
+                  onPress={() => handleDeckSelect(decks[6])}
+                  size="custom"
+                  customHeight={row3Height}
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[6].id}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Fallback: Layout for 5-6 decks */}
+        {decks && decks.length >= 5 && decks.length < 7 && (
           <View style={{ gap: 12 }}>
             {/* Row 1: Two medium cards */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -108,6 +230,7 @@ export default function MainDecksScreen() {
                   onPress={() => handleDeckSelect(decks[0])}
                   size="medium"
                   isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[0].id}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -116,6 +239,7 @@ export default function MainDecksScreen() {
                   onPress={() => handleDeckSelect(decks[1])}
                   size="medium"
                   isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[1].id}
                 />
               </View>
             </View>
@@ -127,10 +251,11 @@ export default function MainDecksScreen() {
                 onPress={() => handleDeckSelect(decks[2])}
                 size="large"
                 isDark={isDark}
+                isNavigating={navigatingToDeck === decks[2].id}
               />
             </View>
 
-            {/* Row 3: Small card and medium card */}
+            {/* Row 3: Remaining cards */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
                 <DeckBentoCard
@@ -138,6 +263,7 @@ export default function MainDecksScreen() {
                   onPress={() => handleDeckSelect(decks[3])}
                   size="small"
                   isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[3].id}
                 />
               </View>
               <View style={{ flex: 1 }}>
@@ -146,9 +272,23 @@ export default function MainDecksScreen() {
                   onPress={() => handleDeckSelect(decks[4])}
                   size="medium"
                   isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[4].id}
                 />
               </View>
             </View>
+
+            {/* Optional 6th deck if exists */}
+            {decks[5] && (
+              <View>
+                <DeckBentoCard
+                  deck={decks[5]}
+                  onPress={() => handleDeckSelect(decks[5])}
+                  size="medium"
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[5].id}
+                />
+              </View>
+            )}
           </View>
         )}
 
@@ -162,6 +302,7 @@ export default function MainDecksScreen() {
                 onPress={() => handleDeckSelect(deck)}
                 size="medium"
                 isDark={isDark}
+                isNavigating={navigatingToDeck === deck.id}
               />
             ))}
           </View>
@@ -196,7 +337,7 @@ export default function MainDecksScreen() {
             </Text>
           </View>
         )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

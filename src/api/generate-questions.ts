@@ -3,9 +3,9 @@ export const config = {
 };
 
 interface GenerateQuestionsRequest {
-  category: 'friends' | 'family' | 'romantic' | 'professional';
+  category: 'friends' | 'family' | 'dating' | 'lovers' | 'work' | 'growth' | 'spice';
   count: number;
-  difficulty?: 'easy' | 'medium' | 'hard';
+  depth?: 'standard' | 'deeper';
   userPreferences?: {
     previousQuestions?: string[];
     skippedQuestions?: string[];
@@ -23,10 +23,10 @@ export default async function handler(req: Request) {
 
   try {
     const body: GenerateQuestionsRequest = await req.json();
-    const { category, count = 5, difficulty = 'medium', userPreferences } = body;
+    const { category, count = 5, depth = 'standard', userPreferences } = body;
 
     // Validate category
-    const validCategories = ['friends', 'family', 'romantic', 'professional'];
+    const validCategories = ['friends', 'family', 'dating', 'lovers', 'work', 'growth', 'spice'];
     if (!validCategories.includes(category)) {
       return new Response(JSON.stringify({ error: 'Invalid category' }), { 
         status: 400,
@@ -46,12 +46,10 @@ export default async function handler(req: Request) {
     // Create context-aware prompt
     let prompt = `Generate ${count} engaging conversation starter questions for the "${category}" category. `;
     
-    if (difficulty === 'easy') {
-      prompt += 'Make them light, fun, and easy to answer. ';
-    } else if (difficulty === 'hard') {
-      prompt += 'Make them deep, thought-provoking, and meaningful. ';
+    if (depth === 'standard') {
+      prompt += 'Make them approachable, safe, and easy to answer. They should be comfortable for most people to discuss. ';
     } else {
-      prompt += 'Make them balanced - interesting but not too personal. ';
+      prompt += 'Make them thought-provoking, deep, and potentially vulnerable. They should encourage deeper reflection and meaningful conversations. ';
     }
 
     // Add adaptive context based on user preferences
@@ -125,7 +123,7 @@ Return only the questions, one per line, without numbering or bullet points.`;
       const tags = generateTags(category, question);
       return {
         text: question,
-        difficulty_level: difficulty,
+        depth_level: depth,
         tags,
       };
     });

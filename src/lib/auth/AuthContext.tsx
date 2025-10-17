@@ -7,7 +7,7 @@ import { User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 // Development bypass flag - set to true to skip Supabase initialization
-const DEV_BYPASS_AUTH = false;
+const DEV_BYPASS_AUTH = process.env.EXPO_PUBLIC_BYPASS_AUTH === 'true';
 
 interface AuthContextType {
   user: User | null;
@@ -115,18 +115,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Get initial session
     const getInitialSession = async () => {
       try {
+        console.log('🔍 AuthContext: Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('❌ AuthContext: Error getting session:', error);
         } else if (session?.user) {
+          console.log('✅ AuthContext: Found existing session for user:', session.user.id);
           setUser(session.user);
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
+        } else {
+          console.log('ℹ️ AuthContext: No existing session found');
         }
       } catch (error) {
-        console.error('Error getting initial session:', error);
+        console.error('❌ AuthContext: Error getting initial session:', error);
       } finally {
+        console.log('🏁 AuthContext: Initial session check complete, setting loading to false');
         setLoading(false);
       }
     };
@@ -136,18 +141,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
+        console.log('🔄 AuthContext: Auth state changed:', event, session?.user?.id);
         
         if (session?.user) {
+          console.log('✅ AuthContext: Setting user and fetching profile for:', session.user.id);
           setUser(session.user);
           const profileData = await fetchProfile(session.user.id);
           setProfile(profileData);
         } else {
+          console.log('🚪 AuthContext: Clearing user and profile');
           setUser(null);
           setProfile(null);
         }
         
-        setLoading(false);
+        // Only set loading to false if we're not in the initial loading state
+        if (event !== 'INITIAL_SESSION') {
+          console.log('🏁 AuthContext: Setting loading to false after auth state change');
+          setLoading(false);
+        } else {
+          console.log('⏳ AuthContext: Skipping loading state change for INITIAL_SESSION');
+        }
       }
     );
 

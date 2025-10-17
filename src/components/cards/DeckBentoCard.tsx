@@ -7,7 +7,7 @@ import { ImageBackground, Pressable, Text, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
     useSharedValue,
-    withSpring
+    withTiming
 } from 'react-native-reanimated';
 
 interface DeckBentoCardProps {
@@ -24,13 +24,15 @@ interface DeckBentoCardProps {
     image?: any;
   };
   onPress: () => void;
-  size: 'small' | 'medium' | 'large';
+  size: 'small' | 'medium' | 'large' | 'custom';
+  customHeight?: number;
   isDark: boolean;
+  isNavigating?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProps) {
+export function DeckBentoCard({ deck, onPress, size, customHeight, isDark, isNavigating }: DeckBentoCardProps) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -40,15 +42,25 @@ export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProp
   });
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.98, { damping: 15, stiffness: 200 });
+    scale.value = withTiming(0.98, { 
+      duration: 100 
+    });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 200 });
+    scale.value = withTiming(1, { 
+      duration: 150 
+    });
   };
 
-  // Size configurations for bento grid - increased for full-screen effect
+  // Size configurations for bento grid - responsive with custom heights
   const getSizeConfig = () => {
+    if (size === 'custom' && customHeight) {
+      // Dynamic padding based on height
+      const padding = customHeight > 250 ? 24 : customHeight > 180 ? 20 : 16;
+      return { height: customHeight, padding };
+    }
+    
     switch (size) {
       case 'large':
         return { height: 320, padding: 24 };
@@ -56,11 +68,32 @@ export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProp
         return { height: 220, padding: 20 };
       case 'small':
         return { height: 180, padding: 16 };
+      default:
+        return { height: 200, padding: 18 };
     }
   };
 
   const { height, padding } = getSizeConfig();
   const questionCount = deck.question_count || deck.estimatedQuestions || 0;
+
+  // Dynamic font sizing based on height
+  const getTitleFontSize = () => {
+    if (size === 'custom') {
+      if (height > 250) return 26;
+      if (height > 180) return 22;
+      return 18;
+    }
+    return size === 'large' ? 26 : size === 'medium' ? 22 : 18;
+  };
+
+  const getDescriptionFontSize = () => {
+    if (size === 'custom') {
+      return height > 250 ? 14 : 13;
+    }
+    return size === 'large' ? 14 : 13;
+  };
+
+  const showDescription = size === 'custom' ? height > 180 : size !== 'small';
 
   return (
     <AnimatedPressable
@@ -75,6 +108,8 @@ export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProp
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
+      android_ripple={{ color: 'rgba(255,255,255,0.1)' }}
+      android_disableSound={true}
     >
       <View
         style={{
@@ -148,7 +183,7 @@ export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProp
               <View>
                 <Text
                   style={{
-                    fontSize: size === 'large' ? 26 : size === 'medium' ? 22 : 18,
+                    fontSize: getTitleFontSize(),
                     fontWeight: '700',
                     color: '#ffffff',
                     marginBottom: 6,
@@ -159,15 +194,15 @@ export function DeckBentoCard({ deck, onPress, size, isDark }: DeckBentoCardProp
                   {deck.name}
                 </Text>
                 
-                {size !== 'small' && (
+                {showDescription && (
                   <Text
                     style={{
-                      fontSize: size === 'large' ? 14 : 13,
+                      fontSize: getDescriptionFontSize(),
                       color: 'rgba(255, 255, 255, 0.85)',
                       marginBottom: 10,
                       lineHeight: 20,
                     }}
-                    numberOfLines={size === 'large' ? 2 : 1}
+                    numberOfLines={height > 250 ? 2 : 1}
                   >
                     {deck.description}
                   </Text>

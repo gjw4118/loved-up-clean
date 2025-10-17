@@ -12,47 +12,66 @@ interface UIMetadata {
 // Map deck categories to UI metadata
 export function getDeckUIMetadata(category: string): UIMetadata {
   const categoryMap: Record<string, UIMetadata> = {
-    friends: {
-      gradient: ['#FF6B35', '#F7931E'],
-      image: require('../../assets/images/onboarding/friends.jpg'),
-      icon: 'F',
-      color: '#FF6B35',
-    },
     family: {
       gradient: ['#4ECDC4', '#44A08D'],
       image: require('../../assets/images/onboarding/family.jpg'),
-      icon: 'H',
+      icon: '🏠',
       color: '#4ECDC4',
     },
-    romantic: {
-      gradient: ['#E74C3C', '#C0392B'],
-      image: require('../../assets/images/onboarding/dating.jpg'),
-      icon: 'D',
-      color: '#E74C3C',
-    },
     dating: {
+      gradient: ['#FF69B4', '#FF1493'],
+      image: require('../../assets/images/onboarding/dating.jpg'),
+      icon: '💕',
+      color: '#FF69B4',
+    },
+    lovers: {
       gradient: ['#E74C3C', '#C0392B'],
       image: require('../../assets/images/onboarding/dating.jpg'),
-      icon: 'D',
+      icon: '❤️',
       color: '#E74C3C',
     },
-    professional: {
-      gradient: ['#3498DB', '#2980B9'],
+    work: {
+      gradient: ['#5B7C99', '#34495E'],
       image: require('../../assets/images/onboarding/growing.jpg'),
-      icon: 'G',
-      color: '#3498DB',
+      icon: '💼',
+      color: '#5B7C99',
     },
-    growing: {
-      gradient: ['#3498DB', '#2980B9'],
+    friends: {
+      gradient: ['#FF6B35', '#F7931E'],
+      image: require('../../assets/images/onboarding/friends.jpg'),
+      icon: '🍷',
+      color: '#FF6B35',
+    },
+    growth: {
+      gradient: ['#27AE60', '#229954'],
       image: require('../../assets/images/onboarding/growing.jpg'),
-      icon: 'G',
-      color: '#3498DB',
+      icon: '🌱',
+      color: '#27AE60',
     },
     spice: {
       gradient: ['#FF1493', '#DC143C'],
       image: require('../../assets/images/onboarding/spicy.jpg'),
       icon: '🔥',
       color: '#FF1493',
+    },
+    // Legacy fallbacks for backwards compatibility
+    romantic: {
+      gradient: ['#E74C3C', '#C0392B'],
+      image: require('../../assets/images/onboarding/dating.jpg'),
+      icon: '❤️',
+      color: '#E74C3C',
+    },
+    professional: {
+      gradient: ['#5B7C99', '#34495E'],
+      image: require('../../assets/images/onboarding/growing.jpg'),
+      icon: '💼',
+      color: '#5B7C99',
+    },
+    growing: {
+      gradient: ['#27AE60', '#229954'],
+      image: require('../../assets/images/onboarding/growing.jpg'),
+      icon: '🌱',
+      color: '#27AE60',
     },
   };
 

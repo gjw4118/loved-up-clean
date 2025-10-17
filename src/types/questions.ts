@@ -17,7 +17,7 @@ export interface Question {
   id: string;
   deck_id: string;
   text: string;
-  difficulty_level: DifficultyLevel;
+  depth_level: DepthLevel;
   tags: string[];
   completion_rate: number;
   skip_rate: number;
@@ -58,14 +58,15 @@ export enum DeckCategory {
   FRIENDS = 'friends',
   FAMILY = 'family',
   DATING = 'dating',
-  GROWING = 'growing',
+  LOVERS = 'lovers',
+  WORK = 'work',
+  GROWTH = 'growth',
   SPICE = 'spice'
 }
 
-export enum DifficultyLevel {
-  EASY = 'easy',
-  MEDIUM = 'medium',
-  HARD = 'hard'
+export enum DepthLevel {
+  STANDARD = 'standard',
+  DEEPER = 'deeper'
 }
 
 export enum InteractionType {

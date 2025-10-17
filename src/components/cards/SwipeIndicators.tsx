@@ -1,9 +1,9 @@
+import { useQuestionCardAnimation } from '@/lib/contexts/QuestionCardAnimationContext';
+import { useQuestionStackAnimation } from '@/lib/contexts/QuestionStackAnimationContext';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { FC } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { useQuestionStackAnimation } from '@/lib/contexts/QuestionStackAnimationContext';
-import { useQuestionCardAnimation } from '@/lib/contexts/QuestionCardAnimationContext';
 
 // SwipeIndicators Component
 // Visual feedback during card drag (colored backgrounds + progress indication)
@@ -41,7 +41,7 @@ export const SwipeIndicators: FC = () => {
       style={[StyleSheet.absoluteFill, containerStyle]}
       pointerEvents="none"
     >
-      {/* Left Swipe Indicator (Skip - Blue) */}
+      {/* Left Swipe Indicator (Skip - Neutral Blue-Gray) */}
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
@@ -54,7 +54,7 @@ export const SwipeIndicators: FC = () => {
         ]}
       >
         <LinearGradient
-          colors={['rgba(59, 130, 246, 0.6)', 'transparent']}
+          colors={['rgba(100, 116, 139, 0.4)', 'transparent']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
@@ -64,7 +64,7 @@ export const SwipeIndicators: FC = () => {
             width: 80,
             height: 80,
             borderRadius: 40,
-            backgroundColor: 'rgba(59, 130, 246, 0.9)',
+            backgroundColor: 'rgba(100, 116, 139, 0.7)',
             justifyContent: 'center',
             alignItems: 'center',
           }}
@@ -80,7 +80,7 @@ export const SwipeIndicators: FC = () => {
         </View>
       </Animated.View>
 
-      {/* Right Swipe Indicator (Complete - Green) */}
+      {/* Right Swipe Indicator (Complete - Neutral Green-Gray) */}
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
@@ -93,7 +93,7 @@ export const SwipeIndicators: FC = () => {
         ]}
       >
         <LinearGradient
-          colors={['transparent', 'rgba(34, 197, 94, 0.6)']}
+          colors={['transparent', 'rgba(74, 222, 128, 0.4)']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={StyleSheet.absoluteFill}
@@ -103,7 +103,7 @@ export const SwipeIndicators: FC = () => {
             width: 80,
             height: 80,
             borderRadius: 40,
-            backgroundColor: 'rgba(34, 197, 94, 0.9)',
+            backgroundColor: 'rgba(74, 222, 128, 0.7)',
             justifyContent: 'center',
             alignItems: 'center',
           }}

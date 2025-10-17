@@ -7,6 +7,7 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 // Apple Sign-In
 export const signInWithApple = async () => {
   try {
+    console.log('🍎 Apple Auth: Starting Apple Sign-In...');
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -14,6 +15,7 @@ export const signInWithApple = async () => {
       ],
     });
 
+    console.log('🍎 Apple Auth: Got Apple credential, signing in with Supabase...');
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'apple',
       token: credential.identityToken!,
@@ -21,12 +23,16 @@ export const signInWithApple = async () => {
     });
 
     if (error) {
+      console.error('❌ Apple Auth: Supabase sign-in error:', error);
       throw error;
     }
+
+    console.log('✅ Apple Auth: Supabase sign-in successful for user:', data.user?.id);
 
     // Update user profile with Apple data if available
     // Apple only provides fullName on first sign-in, so capture it immediately
     if (data.user) {
+      console.log('👤 Apple Auth: Updating user profile...');
       const profileData: any = {
         user_id: data.user.id,
         email: data.user.email!,
@@ -42,9 +48,11 @@ export const signInWithApple = async () => {
         if (lastName) profileData.last_name = lastName;
         if (displayName) profileData.display_name = displayName;
 
+        console.log('👤 Apple Auth: Captured Apple name data:', { firstName, lastName, displayName });
       } else {
         // Fallback to email-based display name if no name provided
         profileData.display_name = data.user.email?.split('@')[0] || 'User';
+        console.log('👤 Apple Auth: Using email-based display name:', profileData.display_name);
       }
 
       // Upsert profile with Apple data
@@ -55,7 +63,9 @@ export const signInWithApple = async () => {
         });
 
       if (profileError) {
-        console.error('Error updating profile with Apple data:', profileError);
+        console.error('❌ Apple Auth: Error updating profile with Apple data:', profileError);
+      } else {
+        console.log('✅ Apple Auth: Profile updated successfully');
       }
     }
 

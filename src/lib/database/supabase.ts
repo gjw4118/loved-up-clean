@@ -38,6 +38,21 @@ export const supabase = supabaseUrl && supabaseAnonKey
       return null as any; // Mock client for development
     })());
 
+// Log Supabase configuration status
+console.log('🔧 Supabase Configuration:', {
+  url: supabaseUrl ? '✅ Configured' : '❌ Missing',
+  anonKey: supabaseAnonKey ? '✅ Configured' : '❌ Missing',
+  client: supabase ? '✅ Created' : '❌ Failed',
+  bypassAuth: process.env.EXPO_PUBLIC_BYPASS_AUTH === 'true' ? '🔧 Enabled' : '❌ Disabled',
+});
+
+// If Supabase is not configured and bypass auth is disabled, warn user
+if (!supabaseUrl || !supabaseAnonKey) {
+  if (process.env.EXPO_PUBLIC_BYPASS_AUTH !== 'true') {
+    console.warn('⚠️ Supabase credentials missing! Set EXPO_PUBLIC_BYPASS_AUTH=true in .env.local to bypass auth, or configure Supabase credentials.');
+  }
+}
+
 // Database type helpers
 export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
 export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];

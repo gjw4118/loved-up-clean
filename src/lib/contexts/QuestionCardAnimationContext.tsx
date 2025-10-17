@@ -1,3 +1,4 @@
+import { useQuestionStore } from '@/stores/questionStore';
 import * as Haptics from 'expo-haptics';
 import { createContext, FC, PropsWithChildren, useCallback, useContext, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
@@ -35,7 +36,11 @@ type ContextValue = {
 
 const QuestionCardAnimationContext = createContext<ContextValue>({} as ContextValue);
 
-export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children }) => {
+interface QuestionCardAnimationProviderProps extends PropsWithChildren {
+  onSwipe?: () => void;
+}
+
+export const QuestionCardAnimationProvider: FC<QuestionCardAnimationProviderProps> = ({ children, onSwipe }) => {
   const {
     isDragging,
     animatedQuestionIndex,
@@ -43,7 +48,15 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
     prevQuestionIndex,
   } = useQuestionStackAnimation();
 
+  const { nextQuestion, hasMoreQuestions } = useQuestionStore();
   const { width } = useWindowDimensions();
+
+  // Create wrapper functions for runOnJS
+  const updateQuestionStore = useCallback(() => {
+    if (hasMoreQuestions()) {
+      nextQuestion();
+    }
+  }, [nextQuestion, hasMoreQuestions]);
   
   // Convert to shared values for worklet access
   const panDistanceShared = useSharedValue(width / 4);
@@ -69,38 +82,58 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
     
     // Store previous index for undo
     prevQuestionIndex.value = currentQuestionIndex.value;
-    currentQuestionIndex.value = nextIndex;
+    
+    // Update the question store to keep it in sync
+    updateQuestionStore();
+    
+    // Notify parent component about swipe
+    if (onSwipe) {
+      onSwipe();
+    }
     
     // Animate card off-screen to the right, then reset
-    panX.value = withTiming(widthShared.value * 2, { duration: 500 }, (finished) => {
+    panX.value = withTiming(widthShared.value * 2, { duration: 400 }, (finished) => {
       if (finished) {
         panX.value = 0;
         panY.value = 0;
-        animatedQuestionIndex.value = nextIndex;
+        // Update current index first
+        currentQuestionIndex.value = nextIndex;
+        // Simple timing for animated index
+        animatedQuestionIndex.value = withTiming(nextIndex, { duration: 150 });
       }
     });
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared]);
+  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared, updateQuestionStore, onSwipe]);
 
   const handleQuestionSkip = useCallback(() => {
     const nextIndex = currentQuestionIndex.value + 1;
     
     // Store previous index for undo
     prevQuestionIndex.value = currentQuestionIndex.value;
-    currentQuestionIndex.value = nextIndex;
+    
+    // Update the question store to keep it in sync
+    updateQuestionStore();
+    
+    // Notify parent component about swipe
+    if (onSwipe) {
+      onSwipe();
+    }
     
     // Animate card off-screen to the left, then reset
-    panX.value = withTiming(-widthShared.value * 2, { duration: 500 }, (finished) => {
+    panX.value = withTiming(-widthShared.value * 2, { duration: 400 }, (finished) => {
       if (finished) {
         panX.value = 0;
         panY.value = 0;
-        animatedQuestionIndex.value = nextIndex;
+        // Update current index first
+        currentQuestionIndex.value = nextIndex;
+        // Simple timing for animated index
+        animatedQuestionIndex.value = withTiming(nextIndex, { duration: 150 });
       }
     });
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared]);
+  }, [currentQuestionIndex, prevQuestionIndex, panX, panY, animatedQuestionIndex, widthShared, updateQuestionStore, onSwipe]);
 
   // Main pan gesture: updates visual progress during drag and commits on release
   const gesture = Gesture.Pan()
@@ -139,17 +172,28 @@ export const QuestionCardAnimationProvider: FC<PropsWithChildren> = ({ children 
         prevQuestionIndex.value = Math.round(currentQuestionIndex.value);
         currentQuestionIndex.value = nextIndex;
 
+        // Update the question store to keep it in sync
+        runOnJS(updateQuestionStore)();
+        
+        // Notify parent component about swipe
+        if (onSwipe) {
+          runOnJS(onSwipe)();
+        }
+
         const sign = event.translationX > 0 ? 1 : -1;
 
         // Fling card off-screen horizontally, then reset
-        panX.value = withTiming(sign * widthShared.value * 2, { duration: 500 }, (finished) => {
+        panX.value = withTiming(sign * widthShared.value * 2, { duration: 400 }, (finished) => {
           if (finished) {
             panX.value = 0;
             panY.value = 0;
-            animatedQuestionIndex.value = nextIndex;
+            // Update current index first
+            currentQuestionIndex.value = nextIndex;
+            // Simple timing for animated index
+            animatedQuestionIndex.value = withTiming(nextIndex, { duration: 150 });
           }
         });
-        panY.value = withTiming(0, { duration: 500 });
+        panY.value = withTiming(0, { duration: 400 });
       } else {
         // Spring back feels snappy but controlled
         panX.value = withSpring(0, SPRING_CONFIG);

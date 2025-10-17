@@ -55,7 +55,7 @@ export interface Database {
           id: string
           deck_id: string
           text: string
-          difficulty_level: 'easy' | 'medium' | 'hard'
+          depth_level: 'standard' | 'deeper'
           tags: string[]
           completion_rate: number
           skip_rate: number
@@ -69,7 +69,7 @@ export interface Database {
           id?: string
           deck_id: string
           text: string
-          difficulty_level?: 'easy' | 'medium' | 'hard'
+          depth_level?: 'standard' | 'deeper'
           tags?: string[]
           completion_rate?: number
           skip_rate?: number
@@ -83,7 +83,7 @@ export interface Database {
           id?: string
           deck_id?: string
           text?: string
-          difficulty_level?: 'easy' | 'medium' | 'hard'
+          depth_level?: 'standard' | 'deeper'
           tags?: string[]
           completion_rate?: number
           skip_rate?: number
