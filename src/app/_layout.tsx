@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -13,7 +13,8 @@ import { HeroUINativeProvider } from 'heroui-native';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import '../../global.css';
 
-import { ThemeProvider } from '@/lib/contexts/ThemeContext';
+import { ThemeProvider as CustomThemeProvider, useTheme } from '@/lib/contexts/ThemeContext';
+
 
 
 
@@ -76,9 +77,10 @@ function RootLayoutNav() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <HeroUINativeProvider>
-            <AuthProvider>
+        <CustomThemeProvider>
+          <NavigationThemeProvider>
+            <HeroUINativeProvider>
+              <AuthProvider>
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -129,10 +131,21 @@ function RootLayoutNav() {
                   }} 
                 />
               </Stack>
-            </AuthProvider>
-          </HeroUINativeProvider>
-        </ThemeProvider>
+              </AuthProvider>
+            </HeroUINativeProvider>
+          </NavigationThemeProvider>
+        </CustomThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
+  );
+}
+
+function NavigationThemeProvider({ children }: { children: React.ReactNode }) {
+  const { isDark } = useTheme();
+  
+  return (
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      {children}
+    </ThemeProvider>
   );
 }
