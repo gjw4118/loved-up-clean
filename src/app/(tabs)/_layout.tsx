@@ -21,6 +21,11 @@ export default function TabLayout() {
         <Label>Us</Label>
       </NativeTabs.Trigger>
       
+      <NativeTabs.Trigger name="learn">
+        <Icon sf={{ default: 'book', selected: 'book.fill' }} />
+        <Label>Learn</Label>
+      </NativeTabs.Trigger>
+      
       <NativeTabs.Trigger name="settings">
         <Icon sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }} />
         <Label>You</Label>

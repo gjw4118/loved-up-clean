@@ -1,20 +1,20 @@
 // Us Screen - View shared question threads
+import { LinearGradient, StatusBar } from '@/components/ui';
+import { useSharedQuestions } from '@/hooks/useSharedQuestions';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import { useSharedQuestions } from '@/hooks/useSharedQuestions';
 import { supabase } from '@/lib/database/supabase';
-import { LinearGradient, StatusBar } from '@/components/ui';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
+    ActivityIndicator,
+    Alert,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
