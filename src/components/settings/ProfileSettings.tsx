@@ -1,7 +1,7 @@
 // Profile Settings Component
 // Minimal Apple-compliant profile management
 
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { Avatar } from 'heroui-native';
 import React from 'react';

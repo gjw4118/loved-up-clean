@@ -1,4 +1,4 @@
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useIconColors } from '@/hooks/useIconColors';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTranslation } from '@/hooks/useTranslation';

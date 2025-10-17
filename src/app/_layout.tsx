@@ -13,7 +13,7 @@ import { HeroUINativeProvider } from 'heroui-native';
 import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-reanimated';
 import '../../global.css';
 
-import { useTheme } from '@/hooks/useTheme';
+import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 
 export {
     // Catch any errors thrown by the Layout component.
@@ -71,17 +71,11 @@ const queryClient = new QueryClient({
 });
 
 function RootLayoutNav() {
-  const { theme, isDark } = useTheme();
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-          <HeroUINativeProvider
-            config={{
-              colorScheme: isDark ? 'dark' : 'light',
-            }}
-          >
+        <ThemeProvider>
+          <HeroUINativeProvider>
             <AuthProvider>
               <Stack
                 screenOptions={{

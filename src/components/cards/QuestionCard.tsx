@@ -6,7 +6,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 
 import { getDeckColor } from '@/constants/Colors';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { Question } from '@/types/questions';
 
 interface QuestionCardProps {

@@ -16,7 +16,7 @@ import Colors, { getDeckColor } from '@/constants/Colors';
 import { useQuestionDecks, useQuestions } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useQuestionStore } from '@/stores/questionStore';
 import { Question, QuestionDeck } from '@/types/questions';
 

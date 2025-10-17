@@ -1,7 +1,7 @@
 // Enhanced Glass Card Component
 // Uses HeroUI Card as base with iOS 26 glass effects overlay
 
-import { useTheme } from '@/hooks/useTheme';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { BlurView } from 'expo-blur'; // Fallback for older iOS versions
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Card } from 'heroui-native';
