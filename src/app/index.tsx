@@ -25,6 +25,7 @@ export default function IndexScreen() {
       if (!loading) {
         const { hasSeenOnboarding } = await import('@/lib/storage/onboarding');
         const seenOnboarding = await hasSeenOnboarding();
+        console.log('IndexScreen: Onboarding status:', { seenOnboarding });
         setCheckingOnboarding(false);
 
         if (!seenOnboarding) {
