@@ -1,58 +1,20 @@
-// GoDeeper App - Main Decks Screen (2x2 Grid)
-// Clean HeroUI Native implementation with Paywall integration
+// GoDeeper App - Sophisticated Asymmetric Bento Grid Layout
+// HeroUI-inspired card design with dynamic sizing
 
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
-import React from 'react';
-import { Dimensions, Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
+import { DeckBentoCard } from '@/components/cards';
 import { StatusBar } from '@/components/ui';
 import { getDeckColor } from '@/constants/Colors';
 import { QUESTION_DECKS } from '@/constants/decks';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/hooks/useTheme';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import React from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get('window');
-
-// Dynamic card sizing based on screen dimensions
-const calculateCardDimensions = () => {
-  const horizontalPadding = 32; // 16px padding on each side
-  const cardSpacing = 16; // Space between cards
-  const availableWidth = width - horizontalPadding - cardSpacing;
-  const cardWidth = availableWidth / 2;
-  
-  // Calculate available height for cards
-  const headerHeight = 120; // Approximate header height
-  const premiumCTAHeight = 100; // Approximate premium CTA height
-  const tabBarHeight = 100; // Approximate tab bar height
-  const breathingRoom = 40; // Extra breathing room
-  const availableHeight = height - headerHeight - premiumCTAHeight - tabBarHeight - breathingRoom;
-  
-  // Make cards square but ensure they fit
-  const cardHeight = Math.min(cardWidth, availableHeight / 2 - 20); // 20px for row spacing
-  
-  return {
-    cardWidth: Math.max(cardWidth, 140), // Minimum width
-    cardHeight: Math.max(cardHeight, 140), // Minimum height
-    cardSpacing: cardSpacing,
-  };
-};
-
-// Icon mapping for decks
-const DECK_ICONS = {
-  friends: 'F',
-  family: '🏠',
-  dating: '💕',
-  growing: '🌱',
-  lovers: 'L', 
-  work: 'W',
-  professional: 'P',
-  romantic: 'R',
-  spice: 'S',
-} as const;
 
 export default function MainDecksScreen() {
   // Use local constants instead of database for now
@@ -71,9 +33,6 @@ export default function MainDecksScreen() {
   const { theme, isDark } = useTheme();
   const { isPremium } = usePremiumStatus();
   const { isPresenting, presentPaywall } = usePaywall();
-  
-  // Calculate dynamic card dimensions
-  const { cardWidth, cardHeight, cardSpacing } = calculateCardDimensions();
 
   const handleDeckSelect = async (deckId: string, deckName: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -160,239 +119,95 @@ export default function MainDecksScreen() {
         </Pressable>
         
 
-        {/* Deck Cards - 2x2 Grid */}
+        {/* Deck Cards - Asymmetric Bento Grid */}
         {decks && decks.length > 0 && (
-          <View>
-            {/* Row 1 */}
-            <View 
-              className="flex-row justify-between mb-4" 
-              style={{ 
-                width: '100%',
-                gap: cardSpacing,
-              }}
-            >
-              {decks.slice(0, 2).map((deck) => {
-                const totalQuestions = deck.question_count || 25;
-                const deckColors = getDeckColor(deck.category);
-                const deckIcon = DECK_ICONS[deck.category as keyof typeof DECK_ICONS] || '📚';
-                
-                return (
-                  <View key={deck.id} style={{ flex: 1 }}>
-                    <Pressable
-                      onPress={() => handleDeckSelect(deck.id, deck.name)}
-                      style={({ pressed }) => ({
-                        width: cardWidth,
-                        height: cardHeight,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 12 },
-                        shadowOpacity: pressed ? 0.15 : 0.25,
-                        shadowRadius: pressed ? 12 : 20,
-                        elevation: pressed ? 8 : 15,
-                        transform: [{ scale: pressed ? 0.95 : 1 }],
-                        opacity: pressed ? 0.9 : 1,
-                      })}
-                      className="rounded-3xl overflow-hidden"
-                    >
-                      {/* Clean Glass Background */}
-                      <View 
-                        className={`absolute inset-0 rounded-3xl backdrop-blur-xl border ${isDark ? 'bg-white/10 border-white/20' : 'bg-black/10 border-black/20'}`}
-                        style={{
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 12,
-                          elevation: 4,
-                        }}
-                      />
-                      
-                      {/* Subtle accent border */}
-                      <View 
-                        className="absolute inset-0 rounded-3xl border"
-                        style={{
-                          borderColor: isDark 
-                            ? `${deckColors.primary}30` 
-                            : `${deckColors.primary}20`,
-                        }}
-                      />
-
-                      <View className="p-6 flex-1 justify-between">
-                        <View>
-                          <View className="items-center mb-4">
-                            <View 
-                              className={`w-20 h-20 rounded-full items-center justify-center border ${isDark ? 'bg-white/20 border-white/30' : 'bg-black/20 border-black/30'}`}
-                              style={{ 
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.1,
-                                shadowRadius: 8,
-                                elevation: 4,
-                              }}
-                            >
-                              <Text 
-                                className="text-3xl font-bold"
-                                style={{ 
-                                  color: isDark 
-                                    ? '#ffffff' 
-                                    : '#000000',
-                                }}
-                              >
-                                {deckIcon}
-                              </Text>
-                            </View>
-                          </View>
-                          <Text className={`text-xl font-bold mb-2 leading-6 text-center ${isDark ? 'text-white' : 'text-black'}`}>
-                            {deck.name}
-                          </Text>
-                          <Text className={`text-sm mb-3 leading-4 text-center ${isDark ? 'text-white/70' : 'text-black/70'}`}>
-                            {totalQuestions} questions
-                          </Text>
-                        </View>
-                        
-                        
-                        {/* Enhanced Action Icon */}
-                        <View 
-                          className={`items-center justify-center rounded-full w-12 h-12 self-center border ${isDark ? 'bg-white/20 border-white/30' : 'bg-black/20 border-black/30'}`}
-                          style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 4,
-                            elevation: 2,
-                          }}
-                        >
-                          <Text 
-                            className="text-xl"
-                            style={{ 
-                              color: isDark 
-                                ? '#ffffff' 
-                                : '#000000',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            →
-                          </Text>
-                        </View>
-                      </View>
-                    </Pressable>
-                  </View>
-                );
-              })}
+          <View style={{ gap: 16 }}>
+            {/* Top Row: Large + Medium */}
+            <View style={{ flexDirection: 'row', gap: 16, height: 280 }}>
+              {/* Friends - Large card (left side) */}
+              {decks[0] && (
+                <View style={{ flex: 2 }}>
+                  <DeckBentoCard
+                    deck={{
+                      id: decks[0].id,
+                      name: decks[0].name,
+                      description: decks[0].description,
+                      icon: decks[0].icon,
+                      color: getDeckColor(decks[0].category).primary,
+                      gradient: [getDeckColor(decks[0].category).primary, getDeckColor(decks[0].category).secondary],
+                      question_count: decks[0].question_count || 25,
+                      isPremium: false,
+                    }}
+                    onPress={() => handleDeckSelect(decks[0].id, decks[0].name)}
+                    size="large"
+                    isDark={isDark}
+                  />
+                </View>
+              )}
+              {/* Family - Medium card (top right) */}
+              {decks[1] && (
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={{
+                      id: decks[1].id,
+                      name: decks[1].name,
+                      description: decks[1].description,
+                      icon: decks[1].icon,
+                      color: getDeckColor(decks[1].category).primary,
+                      gradient: [getDeckColor(decks[1].category).primary, getDeckColor(decks[1].category).secondary],
+                      question_count: decks[1].question_count || 25,
+                      isPremium: false,
+                    }}
+                    onPress={() => handleDeckSelect(decks[1].id, decks[1].name)}
+                    size="medium"
+                    isDark={isDark}
+                  />
+                </View>
+              )}
             </View>
-            
-            {/* Row 2 */}
-            <View 
-              className="flex-row justify-between" 
-              style={{ 
-                width: '100%',
-                gap: cardSpacing,
-              }}
-            >
-              {decks.slice(2, 4).map((deck) => {
-                const totalQuestions = deck.question_count || 25;
-                const deckColors = getDeckColor(deck.category);
-                const deckIcon = DECK_ICONS[deck.category as keyof typeof DECK_ICONS] || '📚';
-                
-                return (
-                  <View key={deck.id} style={{ flex: 1 }}>
-                    <Pressable
-                      onPress={() => handleDeckSelect(deck.id, deck.name)}
-                      style={({ pressed }) => ({
-                        width: cardWidth,
-                        height: cardHeight,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 12 },
-                        shadowOpacity: pressed ? 0.15 : 0.25,
-                        shadowRadius: pressed ? 12 : 20,
-                        elevation: pressed ? 8 : 15,
-                        transform: [{ scale: pressed ? 0.95 : 1 }],
-                        opacity: pressed ? 0.9 : 1,
-                      })}
-                      className="rounded-3xl overflow-hidden"
-                    >
-                      {/* Clean Glass Background */}
-                      <View 
-                        className={`absolute inset-0 rounded-3xl backdrop-blur-xl border ${isDark ? 'bg-white/10 border-white/20' : 'bg-black/10 border-black/20'}`}
-                        style={{
-                          shadowColor: '#000',
-                          shadowOffset: { width: 0, height: 4 },
-                          shadowOpacity: 0.1,
-                          shadowRadius: 12,
-                          elevation: 4,
-                        }}
-                      />
-                      
-                      {/* Subtle accent border */}
-                      <View 
-                        className="absolute inset-0 rounded-3xl border"
-                        style={{
-                          borderColor: isDark 
-                            ? `${deckColors.primary}30` 
-                            : `${deckColors.primary}20`,
-                        }}
-                      />
 
-                      <View className="p-6 flex-1 justify-between">
-                        <View>
-                          <View className="items-center mb-4">
-                            <View 
-                              className={`w-20 h-20 rounded-full items-center justify-center border ${isDark ? 'bg-white/20 border-white/30' : 'bg-black/20 border-black/30'}`}
-                              style={{ 
-                                shadowColor: '#000',
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: 0.1,
-                                shadowRadius: 8,
-                                elevation: 4,
-                              }}
-                            >
-                              <Text 
-                                className="text-3xl font-bold"
-                                style={{ 
-                                  color: isDark 
-                                    ? '#ffffff' 
-                                    : '#000000',
-                                }}
-                              >
-                                {deckIcon}
-                              </Text>
-                            </View>
-                          </View>
-                          <Text className={`text-xl font-bold mb-2 leading-6 text-center ${isDark ? 'text-white' : 'text-black'}`}>
-                            {deck.name}
-                          </Text>
-                          <Text className={`text-sm mb-3 leading-4 text-center ${isDark ? 'text-white/70' : 'text-black/70'}`}>
-                            {totalQuestions} questions
-                          </Text>
-                        </View>
-                        
-                        
-                        {/* Enhanced Action Icon */}
-                        <View 
-                          className={`items-center justify-center rounded-full w-12 h-12 self-center border ${isDark ? 'bg-white/20 border-white/30' : 'bg-black/20 border-black/30'}`}
-                          style={{
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 4,
-                            elevation: 2,
-                          }}
-                        >
-                          <Text 
-                            className="text-xl"
-                            style={{ 
-                              color: isDark 
-                                ? '#ffffff' 
-                                : '#000000',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            →
-                          </Text>
-                        </View>
-                      </View>
-                    </Pressable>
-                  </View>
-                );
-              })}
+            {/* Bottom Row: Two Medium cards */}
+            <View style={{ flexDirection: 'row', gap: 16, height: 200 }}>
+              {/* Dating - Medium card */}
+              {decks[2] && (
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={{
+                      id: decks[2].id,
+                      name: decks[2].name,
+                      description: decks[2].description,
+                      icon: decks[2].icon,
+                      color: getDeckColor(decks[2].category).primary,
+                      gradient: [getDeckColor(decks[2].category).primary, getDeckColor(decks[2].category).secondary],
+                      question_count: decks[2].question_count || 25,
+                      isPremium: false,
+                    }}
+                    onPress={() => handleDeckSelect(decks[2].id, decks[2].name)}
+                    size="medium"
+                    isDark={isDark}
+                  />
+                </View>
+              )}
+              {/* Growing - Medium card */}
+              {decks[3] && (
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={{
+                      id: decks[3].id,
+                      name: decks[3].name,
+                      description: decks[3].description,
+                      icon: decks[3].icon,
+                      color: getDeckColor(decks[3].category).primary,
+                      gradient: [getDeckColor(decks[3].category).primary, getDeckColor(decks[3].category).secondary],
+                      question_count: decks[3].question_count || 25,
+                      isPremium: false,
+                    }}
+                    onPress={() => handleDeckSelect(decks[3].id, decks[3].name)}
+                    size="medium"
+                    isDark={isDark}
+                  />
+                </View>
+              )}
             </View>
           </View>
         )}
