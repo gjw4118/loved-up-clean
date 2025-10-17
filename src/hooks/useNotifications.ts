@@ -5,9 +5,16 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { supabase } from '@/lib/database/supabase';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+
+// Safely import notifications
+let Notifications: any = null;
+try {
+  Notifications = require('expo-notifications');
+} catch (error) {
+  console.warn('expo-notifications not available:', error);
+}
 
 // Check if notifications are available
 const isNotificationsAvailable = () => {
@@ -20,13 +27,19 @@ const isNotificationsAvailable = () => {
 };
 
 // Configure notification handler (for when we do send notifications later)
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowAlert: true,
-  }),
-});
+if (isNotificationsAvailable()) {
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowAlert: true,
+      }),
+    });
+  } catch (error) {
+    console.warn('Failed to set notification handler:', error);
+  }
+}
 
 async function registerForPushNotificationsAsync(): Promise<string | null> {
   // Check if notifications are available
