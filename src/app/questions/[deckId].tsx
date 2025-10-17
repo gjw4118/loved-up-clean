@@ -4,18 +4,18 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { QuestionCardStack } from '@/components/cards/QuestionCardStack';
-import { QuestionStackAnimationProvider } from '@/lib/contexts/QuestionStackAnimationContext';
-import { QuestionCardAnimationProvider } from '@/lib/contexts/QuestionCardAnimationContext';
 import { GlassButton, StatusBar } from '@/components/ui';
 import Colors, { getDeckColor } from '@/constants/Colors';
 import { useQuestionDecks, useQuestions } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { QuestionCardAnimationProvider } from '@/lib/contexts/QuestionCardAnimationContext';
+import { QuestionStackAnimationProvider } from '@/lib/contexts/QuestionStackAnimationContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { useQuestionStore } from '@/stores/questionStore';
 import { Question, QuestionDeck } from '@/types/questions';
