@@ -4,12 +4,13 @@
 
 import { _itemWidth } from '@/components/onboarding/DeckMarqueeItem';
 import { WelcomeCarousel } from '@/components/onboarding/WelcomeCarousel';
+import { GlassButton } from '@/components/ui';
 import { QUESTION_DECKS } from '@/constants/decks';
 import { setOnboardingSeen } from '@/lib/storage/onboarding';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { Text, useWindowDimensions, View } from 'react-native';
 import { useAnimatedReaction, useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -144,26 +145,17 @@ export default function Welcome() {
           </View>
         </View>
 
-        {/* Let's Connect button */}
-        <Pressable
+        {/* Let's Connect button - HeroUI Glass */}
+        <GlassButton
           onPress={handleGetStarted}
-          style={({ pressed }) => ({
-            width: '80%',
-            height: 64,
+          variant="primary"
+          size="lg"
+          className="w-4/5 h-16"
+          style={{
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderColor: 'rgba(255, 255, 255, 0.4)',
             borderRadius: 32,
-            backgroundColor: 'rgba(255, 255, 255, 0.35)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            opacity: pressed ? 0.8 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.4,
-            shadowRadius: 12,
-            elevation: 8,
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.3)',
-          })}
+          }}
         >
           <Text
             style={{
@@ -178,7 +170,7 @@ export default function Welcome() {
           >
             Let's Connect
           </Text>
-        </Pressable>
+        </GlassButton>
       </View>
     </View>
   );

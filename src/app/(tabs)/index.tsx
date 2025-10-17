@@ -14,8 +14,8 @@ import { useQuestionDecks } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import { enrichDecks } from '@/utils/deckEnrichment';
 import { resetOnboardingForTesting } from '@/lib/storage/onboarding';
+import { enrichDecks } from '@/utils/deckEnrichment';
 
 // Enrich database decks with UI metadata
 const createDeckList = (dbDecks: any[]) => {

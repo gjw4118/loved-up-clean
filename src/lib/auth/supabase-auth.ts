@@ -20,7 +20,7 @@ export const signInWithApple = async () => {
     const hashedNonce = await Crypto.digestStringAsync(
       Crypto.CryptoDigestAlgorithm.SHA256,
       nonce,
-      { encoding: Crypto.CryptoEncoding.BASE64URL }
+      { encoding: Crypto.CryptoEncoding.BASE64 }
     );
 
     const { data, error } = await supabase.auth.signInWithIdToken({
