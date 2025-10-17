@@ -54,6 +54,24 @@ export function getDeckUIMetadata(category: string): UIMetadata {
       icon: '🔥',
       color: '#FF1493',
     },
+    siblings: {
+      gradient: ['#9B59B6', '#8E44AD'],
+      image: require('../../assets/images/onboarding/family.jpg'),
+      icon: '👫',
+      color: '#9B59B6',
+    },
+    parents: {
+      gradient: ['#3498DB', '#2980B9'],
+      image: require('../../assets/images/onboarding/family.jpg'),
+      icon: '👨‍👩‍👧‍👦',
+      color: '#3498DB',
+    },
+    'new-baby': {
+      gradient: ['#E67E22', '#D35400'],
+      image: require('../../assets/images/onboarding/family.jpg'),
+      icon: '👶',
+      color: '#E67E22',
+    },
     // Legacy fallbacks for backwards compatibility
     romantic: {
       gradient: ['#E74C3C', '#C0392B'],

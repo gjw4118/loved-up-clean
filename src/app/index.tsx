@@ -20,7 +20,11 @@ export default function IndexScreen() {
       console.log('🚀 IndexScreen: Checking onboarding and route...', { loading, hasNavigated, user: user?.id });
       
       if (!loading && !hasNavigated) {
-        const { hasSeenOnboarding } = await import('@/lib/storage/onboarding');
+        const { hasSeenOnboarding, debugOnboardingStatus } = await import('@/lib/storage/onboarding');
+        
+        // Debug onboarding status
+        await debugOnboardingStatus();
+        
         const seenOnboarding = await hasSeenOnboarding();
         console.log('📋 IndexScreen: Onboarding status:', seenOnboarding);
         

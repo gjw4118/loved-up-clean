@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { DeckBentoCard } from '@/components/cards';
@@ -14,15 +14,64 @@ import { useQuestionDecks } from '@/hooks/questions/useQuestions';
 import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/lib/contexts/ThemeContext';
-import { enrichDecks } from '@/utils/deckEnrichment';
+import { enrichDeck, enrichDecks } from '@/utils/deckEnrichment';
 
 // Enrich database decks with UI metadata
 const createDeckList = (dbDecks: any[]) => {
   // Enrich database decks with UI metadata (gradients, images, icons)
   const enrichedDbDecks = enrichDecks(dbDecks);
   
-  // All decks are now in the database including Spice
-  return enrichedDbDecks;
+  // Add coming soon decks
+  const comingSoonDecks = [
+    {
+      id: 'siblings-coming-soon',
+      name: 'Siblings',
+      description: 'Strengthen bonds with brothers and sisters',
+      category: 'siblings',
+      icon: '👫',
+      question_count: 0,
+      popularity_score: 0,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      isPremium: false,
+      isComingSoon: true,
+    },
+    {
+      id: 'parents-coming-soon',
+      name: 'Parents',
+      description: 'Improving relationship with parents',
+      category: 'parents',
+      icon: '👨‍👩‍👧‍👦',
+      question_count: 0,
+      popularity_score: 0,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      isPremium: false,
+      isComingSoon: true,
+    },
+    {
+      id: 'new-baby-coming-soon',
+      name: 'New Baby',
+      description: 'For couples expecting a baby',
+      category: 'new-baby',
+      icon: '👶',
+      question_count: 0,
+      popularity_score: 0,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      isPremium: false,
+      isComingSoon: true,
+    },
+  ];
+
+  // Enrich coming soon decks
+  const enrichedComingSoonDecks = comingSoonDecks.map(deck => enrichDeck(deck));
+  
+  // Combine database decks with coming soon decks
+  return [...enrichedDbDecks, ...enrichedComingSoonDecks];
 };
 
 export default function MainDecksScreen() {
@@ -71,6 +120,12 @@ export default function MainDecksScreen() {
   const handleDeckSelect = async (deck: any) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
+    // Handle coming soon decks
+    if (deck.isComingSoon) {
+      // Don't navigate, just show haptic feedback
+      return;
+    }
+    
     // Handle premium deck
     if (deck.isPremium && !isPremium) {
       presentPaywall('spice_deck_card');
@@ -90,6 +145,7 @@ export default function MainDecksScreen() {
       });
     }, 100);
   };
+
 
   // Show loading state while fetching decks
   if (decksLoading) {
@@ -124,104 +180,19 @@ export default function MainDecksScreen() {
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
       
-      <View 
+      <ScrollView 
         className="flex-1"
         style={{
           paddingHorizontal: 16,
           paddingTop: 8,
           paddingBottom: 8,
         }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
       >
-        {/* Responsive Bento Grid Layout - 7 Decks (Fills Screen) */}
-        {decks && decks.length >= 7 && (
-          <View style={{ flex: 1, gap: ROW_GAP }}>
-            {/* Row 1 (Top): Two medium cards - 25% height */}
-            <View style={{ flexDirection: 'row', gap: 12, height: row1Height }}>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[0]}
-                  onPress={() => handleDeckSelect(decks[0])}
-                  size="custom"
-                  customHeight={row1Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[0].id}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[1]}
-                  onPress={() => handleDeckSelect(decks[1])}
-                  size="custom"
-                  customHeight={row1Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[1].id}
-                />
-              </View>
-            </View>
-
-            {/* Row 2 (Center): One small + One large featured card - 40% height */}
-            <View style={{ flexDirection: 'row', gap: 12, height: row2Height }}>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[2]}
-                  onPress={() => handleDeckSelect(decks[2])}
-                  size="custom"
-                  customHeight={row2Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[2].id}
-                />
-              </View>
-              <View style={{ flex: 2 }}>
-                <DeckBentoCard
-                  deck={decks[3]}
-                  onPress={() => handleDeckSelect(decks[3])}
-                  size="custom"
-                  customHeight={row2Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[3].id}
-                />
-              </View>
-            </View>
-
-            {/* Row 3 (Bottom): Three small cards - 35% height */}
-            <View style={{ flexDirection: 'row', gap: 12, height: row3Height }}>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[4]}
-                  onPress={() => handleDeckSelect(decks[4])}
-                  size="custom"
-                  customHeight={row3Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[4].id}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[5]}
-                  onPress={() => handleDeckSelect(decks[5])}
-                  size="custom"
-                  customHeight={row3Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[5].id}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[6]}
-                  onPress={() => handleDeckSelect(decks[6])}
-                  size="custom"
-                  customHeight={row3Height}
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[6].id}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Fallback: Layout for 5-6 decks */}
-        {decks && decks.length >= 5 && decks.length < 7 && (
-          <View style={{ gap: 12 }}>
+        {/* Scrollable Grid Layout - All Decks */}
+        {decks && decks.length > 0 && (
+          <View style={{ gap: 16 }}>
             {/* Row 1: Two medium cards */}
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ flex: 1 }}>
@@ -245,66 +216,102 @@ export default function MainDecksScreen() {
             </View>
 
             {/* Row 2: One large card (Featured) */}
-            <View>
-              <DeckBentoCard
-                deck={decks[2]}
-                onPress={() => handleDeckSelect(decks[2])}
-                size="large"
-                isDark={isDark}
-                isNavigating={navigatingToDeck === decks[2].id}
-              />
-            </View>
-
-            {/* Row 3: Remaining cards */}
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[3]}
-                  onPress={() => handleDeckSelect(decks[3])}
-                  size="small"
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[3].id}
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <DeckBentoCard
-                  deck={decks[4]}
-                  onPress={() => handleDeckSelect(decks[4])}
-                  size="medium"
-                  isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[4].id}
-                />
-              </View>
-            </View>
-
-            {/* Optional 6th deck if exists */}
-            {decks[5] && (
+            {decks[2] && (
               <View>
                 <DeckBentoCard
-                  deck={decks[5]}
-                  onPress={() => handleDeckSelect(decks[5])}
-                  size="medium"
+                  deck={decks[2]}
+                  onPress={() => handleDeckSelect(decks[2])}
+                  size="large"
                   isDark={isDark}
-                  isNavigating={navigatingToDeck === decks[5].id}
+                  isNavigating={navigatingToDeck === decks[2].id}
                 />
               </View>
             )}
-          </View>
-        )}
 
-        {/* Fallback: Simple grid for fewer decks */}
-        {decks && decks.length > 0 && decks.length < 5 && (
-          <View style={{ gap: 16 }}>
-            {decks.map((deck) => (
-              <DeckBentoCard
-                key={deck.id}
-                deck={deck}
-                onPress={() => handleDeckSelect(deck)}
-                size="medium"
-                isDark={isDark}
-                isNavigating={navigatingToDeck === deck.id}
-              />
-            ))}
+            {/* Row 3: Two medium cards */}
+            {decks[3] && decks[4] && (
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[3]}
+                    onPress={() => handleDeckSelect(decks[3])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[3].id}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[4]}
+                    onPress={() => handleDeckSelect(decks[4])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[4].id}
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Row 4: Two medium cards */}
+            {decks[5] && decks[6] && (
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[5]}
+                    onPress={() => handleDeckSelect(decks[5])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[5].id}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[6]}
+                    onPress={() => handleDeckSelect(decks[6])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[6].id}
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Row 5: Two medium cards */}
+            {decks[7] && decks[8] && (
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[7]}
+                    onPress={() => handleDeckSelect(decks[7])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[7].id}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <DeckBentoCard
+                    deck={decks[8]}
+                    onPress={() => handleDeckSelect(decks[8])}
+                    size="medium"
+                    isDark={isDark}
+                    isNavigating={navigatingToDeck === decks[8].id}
+                  />
+                </View>
+              </View>
+            )}
+
+            {/* Row 6: One large card (Coming Soon Featured) */}
+            {decks[9] && (
+              <View>
+                <DeckBentoCard
+                  deck={decks[9]}
+                  onPress={() => handleDeckSelect(decks[9])}
+                  size="large"
+                  isDark={isDark}
+                  isNavigating={navigatingToDeck === decks[9].id}
+                />
+              </View>
+            )}
           </View>
         )}
 
@@ -337,7 +344,7 @@ export default function MainDecksScreen() {
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

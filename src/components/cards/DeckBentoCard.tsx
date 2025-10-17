@@ -21,6 +21,7 @@ interface DeckBentoCardProps {
     estimatedQuestions?: number;
     question_count?: number;
     isPremium?: boolean;
+    isComingSoon?: boolean;
     image?: any;
   };
   onPress: () => void;
@@ -74,7 +75,6 @@ export function DeckBentoCard({ deck, onPress, size, customHeight, isDark, isNav
   };
 
   const { height, padding } = getSizeConfig();
-  const questionCount = deck.question_count || deck.estimatedQuestions || 0;
 
   // Dynamic font sizing based on height
   const getTitleFontSize = () => {
@@ -88,12 +88,12 @@ export function DeckBentoCard({ deck, onPress, size, customHeight, isDark, isNav
 
   const getDescriptionFontSize = () => {
     if (size === 'custom') {
-      return height > 250 ? 14 : 13;
+      return height > 250 ? 13 : 12;
     }
-    return size === 'large' ? 14 : 13;
+    return size === 'large' ? 13 : 12;
   };
 
-  const showDescription = size === 'custom' ? height > 180 : size !== 'small';
+  const showDescription = true; // Always show descriptions
 
   return (
     <AnimatedPressable
@@ -171,66 +171,81 @@ export function DeckBentoCard({ deck, onPress, size, customHeight, isDark, isNav
               </View>
             )}
 
+            {/* Coming Soon Badge */}
+            {deck.isComingSoon && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#000',
+                    fontSize: 10,
+                    fontWeight: '800',
+                    letterSpacing: 1,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Coming Soon
+                </Text>
+              </View>
+            )}
+
             {/* Content */}
             <View
               style={{
                 flex: 1,
                 padding,
                 justifyContent: 'flex-end',
+                paddingBottom: Math.max(padding, 12), // Ensure minimum bottom padding
               }}
             >
               {/* Text Content */}
-              <View>
+              <View style={{ minHeight: height > 250 ? 80 : height > 180 ? 60 : 40 }}>
                 <Text
                   style={{
                     fontSize: getTitleFontSize(),
                     fontWeight: '700',
                     color: '#ffffff',
-                    marginBottom: 6,
+                    marginBottom: height > 180 ? 8 : 6,
                     letterSpacing: 0.3,
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
+                    flexShrink: 0, // Prevent shrinking
                   }}
                   numberOfLines={1}
+                  adjustsFontSizeToFit={true}
+                  minimumFontScale={0.8}
                 >
                   {deck.name}
                 </Text>
                 
-                {showDescription && (
-                  <Text
-                    style={{
-                      fontSize: getDescriptionFontSize(),
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      marginBottom: 10,
-                      lineHeight: 20,
-                    }}
-                    numberOfLines={height > 250 ? 2 : 1}
-                  >
-                    {deck.description}
-                  </Text>
-                )}
-
-                <View
+                <Text
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: 10,
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    alignSelf: 'flex-start',
+                    fontSize: getDescriptionFontSize(),
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    marginBottom: 0,
+                    lineHeight: height > 250 ? 18 : 16,
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: '700',
-                      color: '#ffffff',
-                      letterSpacing: 0.5,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {questionCount} Questions
-                  </Text>
-                </View>
+                  {deck.description}
+                </Text>
               </View>
             </View>
           </ImageBackground>
@@ -242,65 +257,81 @@ export function DeckBentoCard({ deck, onPress, size, customHeight, isDark, isNav
             end={{ x: 1, y: 1 }}
             style={{ flex: 1 }}
           >
+            {/* Coming Soon Badge */}
+            {deck.isComingSoon && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: 16,
+                  right: 16,
+                  backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                  paddingHorizontal: 14,
+                  paddingVertical: 6,
+                  borderRadius: 20,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  zIndex: 1,
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#000',
+                    fontSize: 10,
+                    fontWeight: '800',
+                    letterSpacing: 1,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Coming Soon
+                </Text>
+              </View>
+            )}
+
             {/* Same content structure as above */}
             <View
               style={{
                 flex: 1,
                 padding,
                 justifyContent: 'flex-end',
+                paddingBottom: Math.max(padding, 12), // Ensure minimum bottom padding
               }}
             >
-              <View>
+              <View style={{ minHeight: size === 'large' ? 80 : size === 'medium' ? 60 : 40 }}>
                 <Text
                   style={{
                     fontSize: size === 'large' ? 26 : size === 'medium' ? 22 : 18,
                     fontWeight: '700',
                     color: '#ffffff',
-                    marginBottom: 6,
+                    marginBottom: size === 'large' ? 8 : 6,
                     letterSpacing: 0.3,
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
+                    flexShrink: 0, // Prevent shrinking
                   }}
                   numberOfLines={1}
+                  adjustsFontSizeToFit={true}
+                  minimumFontScale={0.8}
                 >
                   {deck.name}
                 </Text>
                 
-                {size !== 'small' && (
-                  <Text
-                    style={{
-                      fontSize: size === 'large' ? 14 : 13,
-                      color: 'rgba(255, 255, 255, 0.85)',
-                      marginBottom: 10,
-                      lineHeight: 20,
-                    }}
-                    numberOfLines={size === 'large' ? 2 : 1}
-                  >
-                    {deck.description}
-                  </Text>
-                )}
-
-                <View
+                <Text
                   style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    borderRadius: 10,
-                    paddingVertical: 6,
-                    paddingHorizontal: 12,
-                    alignSelf: 'flex-start',
+                    fontSize: size === 'large' ? 13 : 12,
+                    color: 'rgba(255, 255, 255, 0.9)',
+                    marginBottom: 0,
+                    lineHeight: size === 'large' ? 18 : 16,
+                    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 2,
                   }}
                 >
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: '700',
-                      color: '#ffffff',
-                      letterSpacing: 0.5,
-                      textTransform: 'uppercase',
-                    }}
-                  >
-                    {questionCount} Questions
-                  </Text>
-                </View>
+                  {deck.description}
+                </Text>
               </View>
             </View>
           </LinearGradient>
