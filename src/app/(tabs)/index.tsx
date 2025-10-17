@@ -5,7 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DeckBentoCard } from '@/components/cards';
@@ -15,6 +15,7 @@ import { usePaywall } from '@/hooks/usePaywall';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { enrichDecks } from '@/utils/deckEnrichment';
+import { resetOnboardingForTesting } from '@/lib/storage/onboarding';
 
 // Enrich database decks with UI metadata
 const createDeckList = (dbDecks: any[]) => {
@@ -101,6 +102,16 @@ export default function MainDecksScreen() {
           paddingBottom: 32,
         }}
       >
+        {/* Debug: Reset onboarding button */}
+        <Pressable 
+          onPress={async () => {
+            await resetOnboardingForTesting();
+            console.log('Onboarding reset - restart app to see welcome screen');
+          }}
+          className="mb-4 px-4 py-2 bg-red-500 rounded-lg"
+        >
+          <Text className="text-white text-sm">🧪 Reset Onboarding (Debug)</Text>
+        </Pressable>
         {/* Premium Bento Grid Layout - Full Screen */}
         {decks && decks.length >= 5 && (
           <View style={{ gap: 12 }}>
