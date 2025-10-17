@@ -34,8 +34,8 @@ export const supabase = supabaseUrl && supabaseAnonKey
       },
     })
   : ((() => {
-      console.warn('⚠️  Supabase not configured - create .env.local with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
-      return null as any; // Mock client for development
+      console.error('❌ Supabase not configured - Please create .env.local with:\nEXPO_PUBLIC_SUPABASE_URL=your_url\nEXPO_PUBLIC_SUPABASE_ANON_KEY=your_key');
+      return null as any;
     })());
 
 // Log Supabase configuration status
@@ -43,14 +43,11 @@ console.log('🔧 Supabase Configuration:', {
   url: supabaseUrl ? '✅ Configured' : '❌ Missing',
   anonKey: supabaseAnonKey ? '✅ Configured' : '❌ Missing',
   client: supabase ? '✅ Created' : '❌ Failed',
-  bypassAuth: process.env.EXPO_PUBLIC_BYPASS_AUTH === 'true' ? '🔧 Enabled' : '❌ Disabled',
 });
 
-// If Supabase is not configured and bypass auth is disabled, warn user
+// If Supabase is not configured, show error
 if (!supabaseUrl || !supabaseAnonKey) {
-  if (process.env.EXPO_PUBLIC_BYPASS_AUTH !== 'true') {
-    console.warn('⚠️ Supabase credentials missing! Set EXPO_PUBLIC_BYPASS_AUTH=true in .env.local to bypass auth, or configure Supabase credentials.');
-  }
+  console.error('❌ Supabase credentials missing! The app requires proper configuration to work.');
 }
 
 // Database type helpers

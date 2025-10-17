@@ -1,13 +1,10 @@
 // Authentication Context for Connect App
-// Based on PRD requirements
+// Apple Sign-In only - Simple & Clean
 
 import { supabase } from '@/lib/database/supabase';
 import { UserProfile } from '@/types/user';
 import { User } from '@supabase/supabase-js';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-// Development bypass flag - set to true to skip Supabase initialization
-const DEV_BYPASS_AUTH = process.env.EXPO_PUBLIC_BYPASS_AUTH === 'true';
 
 interface AuthContextType {
   user: User | null;
@@ -78,43 +75,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // Development bypass: skip Supabase initialization
-    if (DEV_BYPASS_AUTH) {
-      console.log('AuthContext: DEV BYPASS - Skipping Supabase initialization');
-      
-      // Set mock user and profile data for development
-      const mockUser = {
-        id: 'dev-user-123',
-        email: 'dev@example.com',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        aud: 'authenticated',
-        role: 'authenticated',
-        app_metadata: {},
-        user_metadata: {},
-        identities: [],
-        factors: [],
-      } as User;
-      
-      const mockProfile = {
-        id: 'dev-user-123',
-        email: 'dev@example.com',
-        first_name: 'John',
-        last_name: 'Doe',
-        avatar_url: undefined,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as UserProfile;
-      
-      setUser(mockUser);
-      setProfile(mockProfile);
-      setLoading(false);
-      return;
-    }
-
     // Check if Supabase is configured
     if (!supabase) {
-      console.warn('⚠️ AuthContext: Supabase not configured. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY');
+      console.error('❌ AuthContext: Supabase not configured. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env.local file');
       setLoading(false);
       return;
     }

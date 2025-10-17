@@ -7,6 +7,10 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 // Apple Sign-In
 export const signInWithApple = async () => {
   try {
+    if (!supabase) {
+      throw new Error('Supabase not configured. Please set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env.local file');
+    }
+
     console.log('🍎 Apple Auth: Starting Apple Sign-In...');
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
@@ -79,6 +83,10 @@ export const signInWithApple = async () => {
 // Sign Out
 export const signOut = async () => {
   try {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+
     // Sign out from Supabase
     const { error } = await supabase.auth.signOut();
     
@@ -96,6 +104,10 @@ export const signOut = async () => {
 // Get current user
 export const getCurrentUser = async () => {
   try {
+    if (!supabase) {
+      throw new Error('Supabase not configured');
+    }
+
     const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error) {
