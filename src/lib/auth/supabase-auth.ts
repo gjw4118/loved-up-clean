@@ -3,31 +3,21 @@
 
 import { supabase } from '@/lib/database/supabase';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Crypto from 'expo-crypto';
 
 // Apple Sign-In
 export const signInWithApple = async () => {
   try {
-    // Create a secure nonce BEFORE requesting Apple authentication
-    const nonce = Math.random().toString(36).substring(2, 15);
-    const hashedNonce = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      nonce,
-      { encoding: Crypto.CryptoEncoding.BASE64 }
-    );
-
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
         AppleAuthentication.AppleAuthenticationScope.EMAIL,
       ],
-      nonce: hashedNonce, // Pass the hashed nonce to Apple
     });
 
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'apple',
       token: credential.identityToken!,
-      nonce: hashedNonce, // Use the same hashed nonce for Supabase
+      // Don't pass nonce - let Supabase handle it
     });
 
     if (error) {
