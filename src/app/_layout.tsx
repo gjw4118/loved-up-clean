@@ -16,6 +16,7 @@ import '../../global.css';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 
 
+
 export {
     // Catch any errors thrown by the Layout component.
     ErrorBoundary
@@ -76,13 +77,8 @@ function RootLayoutNav() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          {({ isDark }) => (
-            <HeroUINativeProvider
-              config={{
-                colorScheme: isDark ? 'dark' : 'light',
-              }}
-            >
-              <AuthProvider>
+          <HeroUINativeProvider>
+            <AuthProvider>
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -133,9 +129,8 @@ function RootLayoutNav() {
                   }} 
                 />
               </Stack>
-              </AuthProvider>
-            </HeroUINativeProvider>
-          )}
+            </AuthProvider>
+          </HeroUINativeProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

@@ -9,6 +9,16 @@ import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
+// Check if notifications are available
+const isNotificationsAvailable = () => {
+  try {
+    return Notifications && typeof Notifications.getPermissionsAsync === 'function';
+  } catch (error) {
+    console.warn('Notifications not available:', error);
+    return false;
+  }
+};
+
 // Configure notification handler (for when we do send notifications later)
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -19,6 +29,12 @@ Notifications.setNotificationHandler({
 });
 
 async function registerForPushNotificationsAsync(): Promise<string | null> {
+  // Check if notifications are available
+  if (!isNotificationsAvailable()) {
+    console.log('⚠️ Push notifications not available');
+    return null;
+  }
+
   // Only work on physical devices
   if (!Device.isDevice) {
     console.log('⚠️ Push notifications require a physical device');
@@ -68,6 +84,18 @@ export const useNotifications = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+
+  // Early return if notifications not available
+  if (!isNotificationsAvailable()) {
+    return {
+      expoPushToken: null,
+      isEnabled: false,
+      isLoading: false,
+      enablePushNotifications: async () => false,
+      disablePushNotifications: async () => false,
+      togglePushNotifications: async () => false,
+    };
+  }
 
   // Save token to Supabase
   const saveTokenToSupabase = async (token: string) => {
