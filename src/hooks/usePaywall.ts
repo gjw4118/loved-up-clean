@@ -4,6 +4,7 @@ import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { getOfferings, purchasePackage, restorePurchases } from '@/lib/purchases/revenuecat';
 import { useCallback, useState } from 'react';
 import { Alert } from 'react-native';
+import Purchases from 'react-native-purchases';
 
 export type PaywallTrigger = 
   | 'premium_button' 
@@ -49,67 +50,43 @@ export const usePaywall = (): UsePaywallReturn => {
 
     try {
       setIsPresenting(true);
-      console.log('💳 Presenting paywall for trigger:', trigger);
+      console.log('💳 Presenting RevenueCat paywall for trigger:', trigger);
 
-      // Get available offerings
-      const offerings = await getOfferings();
+      // Present RevenueCat's native paywall UI
+      const paywallResult = await Purchases.presentPaywall();
       
-      if (!offerings || !offerings.current) {
-        throw new Error('No offerings available');
+      console.log('📱 Paywall result:', paywallResult);
+
+      // Check if user made a purchase
+      if (paywallResult && paywallResult.customerInfo) {
+        const isPremiumNow = paywallResult.customerInfo.entitlements.active['premium'] !== undefined;
+        
+        if (isPremiumNow) {
+          console.log('✅ Purchase successful via paywall!');
+          refetch(); // Refresh premium status
+          Alert.alert(
+            'Welcome to Premium! 🎉',
+            'You now have full access to all premium features.',
+            [{ text: 'Get Started!' }]
+          );
+        }
       }
-
-      const packages = offerings.current.availablePackages;
-      
-      if (packages.length === 0) {
-        throw new Error('No packages available');
-      }
-
-      // For now, show a simple alert with package options
-      // TODO: Create a proper paywall UI component
-      const packageNames = packages.map((pkg, index) => 
-        `${index + 1}. ${pkg.product.title} - ${pkg.product.priceString}`
-      ).join('\n');
-
-      Alert.alert(
-        'Upgrade to Premium',
-        `Unlock all premium features:\n\n✨ Spice questions\n🎯 Deeper question levels\n🎙️ AI relationship coach\n\n${packageNames}`,
-        [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Restore Purchases',
-            onPress: async () => {
-              const restored = await restore();
-              if (restored) {
-                Alert.alert('Success!', 'Your purchases have been restored! 🎉');
-              } else {
-                Alert.alert('No Purchases', 'No previous purchases found.');
-              }
-            },
-          },
-          {
-            text: 'Subscribe',
-            onPress: async () => {
-              // Default to first package (usually monthly)
-              await purchaseProduct(packages[0].identifier);
-            },
-          },
-        ]
-      );
 
     } catch (error: any) {
       console.error('❌ Error presenting paywall:', error);
-      Alert.alert(
-        'Error',
-        'Unable to load subscription options. Please try again later.',
-        [{ text: 'OK' }]
-      );
+      
+      // Only show error if it's not a user cancellation
+      if (error.code !== 'PURCHASE_CANCELLED' && error.message !== 'User cancelled') {
+        Alert.alert(
+          'Error',
+          'Unable to load subscription options. Please try again later.',
+          [{ text: 'OK' }]
+        );
+      }
     } finally {
       setIsPresenting(false);
     }
-  }, [isPremium]);
+  }, [isPremium, refetch]);
 
   const purchaseProduct = useCallback(async (packageIdentifier: string): Promise<boolean> => {
     setIsPurchasing(true);
