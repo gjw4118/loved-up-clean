@@ -14,8 +14,8 @@ import { configureReanimatedLogger, ReanimatedLogLevel } from 'react-native-rean
 import '../../global.css';
 
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/lib/contexts/ThemeContext';
-import { setupDeepLinkListeners, handleDeepLink } from '@/lib/linking/deepLinkHandler';
-import { initializeRevenueCat, identifyUser } from '@/lib/purchases/revenuecat';
+import { handleDeepLink, setupDeepLinkListeners } from '@/lib/linking/deepLinkHandler';
+import { identifyUser, initializeRevenueCat } from '@/lib/purchases/revenuecat';
 
 
 

@@ -7,6 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Mic, AlertCircle, Volume2, VolumeX } from 'lucide-react-native';
 
 import { VoiceRecorder } from '@/components/coach/VoiceRecorder';
 import { StatusBar } from '@/components/ui';
@@ -23,67 +24,16 @@ export default function CoachScreen() {
   const insets = useSafeAreaInsets();
   const { isPremium, loading: premiumLoading } = usePremiumStatus();
   const { presentPaywall } = usePaywall();
-  const [mode, setMode] = useState<CoachMode>('conversation');
   const [coachState, coachActions] = useCoachVoice();
-  const [recentTopics, setRecentTopics] = useState<string[]>([]);
-
-  // Load recent topics from database
-  useEffect(() => {
-    loadRecentTopics();
-  }, []);
-
-  const loadRecentTopics = async () => {
-    try {
-      if (!supabase || !user) {
-        setRecentTopics([
-          'Communication in conflict',
-          'Building emotional intimacy',
-          'Understanding love languages',
-        ]);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('coach_topics')
-        .select('topic, coach_sessions!inner(user_id)')
-        .eq('coach_sessions.user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (error) {
-        console.error('Error loading recent topics:', error);
-      }
-      
-      if (data && data.length > 0) {
-        setRecentTopics(data.map((t: any) => t.topic));
-      } else {
-        setRecentTopics([
-          'Communication in conflict',
-          'Building emotional intimacy',
-          'Understanding love languages',
-        ]);
-      }
-    } catch (error) {
-      console.error('Failed to load recent topics:', error);
-      setRecentTopics([
-        'Communication in conflict',
-        'Building emotional intimacy',
-        'Understanding love languages',
-      ]);
-    }
-  };
 
   const suggestedQuestions = [
     'How can I improve communication with my partner?',
     'What are healthy boundaries in relationships?',
-    'How do I express my needs without conflict?',
-    'Tell me about attachment styles in relationships',
+    'How do I express my needs without creating conflict?',
+    'Help me understand attachment styles',
+    'What does emotional intimacy actually mean?',
+    'How do I know if my relationship is healthy?',
   ];
-
-  const toggleMode = async (newMode: CoachMode) => {
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setMode(newMode);
-  };
 
   const startSession = async () => {
     // Check premium status first
@@ -101,7 +51,7 @@ export default function CoachScreen() {
       return;
     }
 
-    await coachActions.startSession(mode);
+    await coachActions.startSession('guidance');
   };
 
   const handleSuggestedQuestion = async (question: string) => {
@@ -131,11 +81,11 @@ export default function CoachScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* Header with Speaker Toggle */}
+        {/* Header */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top + 24, 70) }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
             <Text style={[styles.headerTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-              Coach
+              Relationship Coach
             </Text>
             
             {/* Premium Badge */}
@@ -146,7 +96,7 @@ export default function CoachScreen() {
             )}
           </View>
           
-          {/* Speaker Mode Toggle */}
+          {/* Speaker Mode Toggle - Only show when active */}
           {coachState.isActive && (
             <TouchableOpacity
               onPress={coachActions.toggleSpeakerMode}
@@ -159,65 +109,23 @@ export default function CoachScreen() {
                 }
               ]}
             >
-              <Text style={{ fontSize: 20 }}>
-                {coachState.isSpeakerMode ? '🔊' : '🔇'}
-              </Text>
+              <View style={styles.speakerIcon}>
+                <Text style={[
+                  styles.speakerIconText,
+                  { color: coachState.isSpeakerMode ? '#ffffff' : (isDark ? '#9CA3AF' : '#6B7280') }
+                ]}>
+                  {coachState.isSpeakerMode ? '♪' : '─'}
+                </Text>
+              </View>
             </TouchableOpacity>
           )}
         </View>
 
-        {/* Mode Toggle */}
-        <View style={styles.modeToggleContainer}>
-          <View style={[
-            styles.modeToggle,
-            {
-              backgroundColor: isDark 
-                ? 'rgba(255, 255, 255, 0.1)' 
-                : 'rgba(0, 0, 0, 0.05)',
-            }
-          ]}>
-            <TouchableOpacity
-              onPress={() => toggleMode('conversation')}
-              style={[
-                styles.modeButton,
-                mode === 'conversation' && {
-                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                },
-              ]}
-            >
-              <Text style={[
-                styles.modeButtonText,
-                {
-                  color: mode === 'conversation'
-                    ? (isDark ? '#ffffff' : '#000000')
-                    : (isDark ? '#9CA3AF' : '#6B7280'),
-                }
-              ]}>
-                Conversation
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => toggleMode('guidance')}
-              style={[
-                styles.modeButton,
-                mode === 'guidance' && {
-                  backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
-                },
-              ]}
-            >
-              <Text style={[
-                styles.modeButtonText,
-                {
-                  color: mode === 'guidance'
-                    ? (isDark ? '#ffffff' : '#000000')
-                    : (isDark ? '#9CA3AF' : '#6B7280'),
-                }
-              ]}>
-                Guidance
-              </Text>
-            </TouchableOpacity>
-          </View>
+        {/* Subtitle */}
+        <View style={styles.subtitleContainer}>
+          <Text style={[styles.subtitle, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
+            Evidence-based guidance for healthier relationships
+          </Text>
         </View>
 
         {/* Voice Interface */}
@@ -257,23 +165,24 @@ export default function CoachScreen() {
               <TouchableOpacity
                 onPress={startSession}
                 activeOpacity={0.8}
-                style={styles.startButton}
+                style={[
+                  styles.startButton,
+                  {
+                    backgroundColor: isDark ? '#1a1a1a' : '#ffffff',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  }
+                ]}
               >
-                <LinearGradient
-                  colors={['#FF6B35', '#F7931E']}
-                  style={StyleSheet.absoluteFill}
-                />
-                <Text style={{ fontSize: 64 }}>🎙️</Text>
-                <Text style={styles.startButtonText}>
-                  Tap to Start
+                <View style={[styles.micIconContainer, { backgroundColor: '#FF6B35' }]}>
+                  <Mic size={48} color="#ffffff" strokeWidth={2} />
+                </View>
+                <Text style={[styles.startButtonText, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  Start Voice Session
+                </Text>
+                <Text style={[styles.startButtonHint, { color: isDark ? '#6B7280' : '#9CA3AF' }]}>
+                  Tap to begin
                 </Text>
               </TouchableOpacity>
-
-              <Text style={[styles.startDescription, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
-                {mode === 'conversation' 
-                  ? 'Practice relationship conversations with AI feedback'
-                  : 'Get personalized guidance on relationship growth'}
-              </Text>
             </>
           )}
         </View>
@@ -287,8 +196,8 @@ export default function CoachScreen() {
               style={styles.errorCard}
             >
               <View style={styles.errorContent}>
-                <Text style={{ fontSize: 20, marginRight: 12 }}>⚠️</Text>
-                <Text style={[styles.errorText, { color: isDark ? '#ffffff' : '#000000' }]}>
+                <AlertCircle size={20} color="#EF4444" style={{ marginRight: 12 }} />
+                <Text style={[styles.errorText, { color: isDark ? '#ffffff' : '#000000', flex: 1 }]}>
                   {coachState.error}
                 </Text>
                 <TouchableOpacity onPress={coachActions.clearError}>
@@ -301,112 +210,31 @@ export default function CoachScreen() {
           </View>
         )}
 
-        {/* Recent Topics / Suggested Questions */}
-        {mode === 'guidance' ? (
-          <>
-            {/* Recent Topics */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={{ fontSize: 18, marginRight: 8 }}>🕒</Text>
-                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  Recent Topics
-                </Text>
-              </View>
-
-              {recentTopics.map((topic, index) => (
-                <BlurView 
-                  key={index}
-                  intensity={isDark ? 20 : 15}
-                  tint={isDark ? 'dark' : 'light'}
-                  style={[styles.topicCard, { marginBottom: 12 }]}
-                >
-                  <LinearGradient
-                    colors={isDark 
-                      ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] 
-                      : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.05)']
-                    }
-                    style={StyleSheet.absoluteFill}
-                  />
-                  <Text style={[styles.topicText, { color: isDark ? '#ffffff' : '#000000' }]}>
-                    {topic}
-                  </Text>
-                </BlurView>
-              ))}
-            </View>
-
-            {/* Suggested Questions */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={{ fontSize: 18, marginRight: 8 }}>💡</Text>
-                <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  Suggested Questions
-                </Text>
-              </View>
-
-              {suggestedQuestions.map((question, index) => (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => handleSuggestedQuestion(question)}
-                  disabled={coachState.isProcessing}
-                >
-                  <BlurView 
-                    intensity={isDark ? 20 : 15}
-                    tint={isDark ? 'dark' : 'light'}
-                    style={[styles.questionCard, { marginBottom: 12 }]}
-                  >
-                    <LinearGradient
-                      colors={isDark 
-                        ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] 
-                        : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.05)']
-                      }
-                      style={StyleSheet.absoluteFill}
-                    />
-                    <Text style={{ fontSize: 16, marginRight: 12 }}>💬</Text>
-                    <Text style={[styles.questionText, { color: isDark ? '#ffffff' : '#000000' }]}>
-                      {question}
-                    </Text>
-                  </BlurView>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        ) : (
-          /* Conversation Mode Info */
+        {/* Suggested Questions */}
+        {!coachState.isActive && (
           <View style={styles.section}>
-            <BlurView 
-              intensity={isDark ? 25 : 20}
-              tint={isDark ? 'dark' : 'light'}
-              style={styles.infoCard}
-            >
-              <LinearGradient
-                colors={isDark 
-                  ? ['rgba(255, 255, 255, 0.08)', 'rgba(255, 255, 255, 0.03)'] 
-                  : ['rgba(0, 0, 0, 0.03)', 'rgba(0, 0, 0, 0.08)']
-                }
-                style={StyleSheet.absoluteFill}
-              />
-              <View style={styles.infoContent}>
-                <Text style={[styles.infoTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-                  Conversation Practice Mode
-                </Text>
-                
-                <Text style={[styles.infoDescription, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
-                  I'll help you practice difficult conversations, explore your feelings, and improve your communication skills.
-                </Text>
+            <Text style={[styles.sectionTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              Ways to Start
+            </Text>
 
-                <View style={[styles.tipsBox, { backgroundColor: 'rgba(255, 107, 53, 0.1)' }]}>
-                  <Text style={[styles.tipsTitle, { color: '#FF6B35' }]}>
-                    Tips for Best Results:
-                  </Text>
-                  <Text style={[styles.tipsText, { color: isDark ? '#D1D5DB' : '#4B5563' }]}>
-                    • Speak naturally and honestly{'\n'}
-                    • Take your time to think{'\n'}
-                    • Ask for clarification if needed{'\n'}
-                    • Practice what you'd like to say
-                  </Text>
-                </View>
-              </View>
-            </BlurView>
+            {suggestedQuestions.map((question, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleSuggestedQuestion(question)}
+                disabled={coachState.isProcessing}
+                style={[
+                  styles.questionCard,
+                  {
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                  }
+                ]}
+              >
+                <Text style={[styles.questionText, { color: isDark ? '#ffffff' : '#000000' }]}>
+                  {question}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         )}
       </ScrollView>
@@ -440,6 +268,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
+  subtitleContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 32,
+  },
+  subtitle: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
   speakerButton: {
     width: 44,
     height: 44,
@@ -452,26 +288,14 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  modeToggleContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-    alignItems: 'center',
-  },
-  modeToggle: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    padding: 4,
+  speakerIcon: {
     width: '100%',
-    maxWidth: 320,
-  },
-  modeButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    height: '100%',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  modeButtonText: {
-    fontSize: 16,
+  speakerIconText: {
+    fontSize: 20,
     fontWeight: '600',
   },
   voiceInterface: {
@@ -480,29 +304,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   startButton: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+    width: '100%',
+    maxWidth: 320,
+    padding: 32,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'hidden',
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  micIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   startButtonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginTop: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
   },
-  startDescription: {
+  startButtonHint: {
     fontSize: 15,
-    textAlign: 'center',
-    marginTop: 24,
-    maxWidth: 280,
   },
   endSessionButton: {
     marginTop: 24,
@@ -543,68 +372,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 32,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  topicCard: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  topicText: {
-    fontSize: 16,
-  },
   questionCard: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 12,
   },
   questionText: {
     fontSize: 16,
-    flex: 1,
-  },
-  infoCard: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  infoContent: {
-    padding: 20,
-  },
-  infoTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  infoDescription: {
-    fontSize: 16,
     lineHeight: 24,
-    marginBottom: 16,
-  },
-  tipsBox: {
-    borderRadius: 12,
-    padding: 16,
-  },
-  tipsTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  tipsText: {
-    fontSize: 15,
-    lineHeight: 22,
   },
 });
