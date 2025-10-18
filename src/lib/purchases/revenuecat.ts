@@ -1,206 +1,238 @@
-// RevenueCat SDK Configuration
-// Handles in-app purchases and subscriptions
+// RevenueCat Integration for GoDeeper
+// Handles subscription management and premium feature access
 
-import { ENV } from '@/config/env';
 import Purchases, {
-  CustomerInfo,
   LOG_LEVEL,
-  PurchasesOffering,
-  PurchasesPackage,
+  PurchasesOfferings,
+  CustomerInfo,
 } from 'react-native-purchases';
+import { Platform } from 'react-native';
 
-// Product IDs for premium subscriptions
-export const PRODUCT_IDS = {
-  PREMIUM_MONTHLY: 'premium_monthly',
-  PREMIUM_YEARLY: 'premium_yearly',
-  PREMIUM_LIFETIME: 'premium_lifetime',
-} as const;
+const REVENUECAT_API_KEY_IOS = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || '';
+const REVENUECAT_API_KEY_ANDROID = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || '';
+const PREMIUM_ENTITLEMENT = process.env.EXPO_PUBLIC_PREMIUM_ENTITLEMENT || 'premium';
 
-// Entitlement IDs (configured in RevenueCat dashboard)
-export const ENTITLEMENTS = {
-  PREMIUM: 'premium',
-} as const;
+// Development bypass flag
+const DEV_MODE = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
+const BYPASS_PREMIUM = process.env.EXPO_PUBLIC_BYPASS_PREMIUM === 'true';
 
-let isConfigured = false;
+let isInitialized = false;
 
 /**
  * Initialize RevenueCat SDK
- * Call this once when the app starts, after user authentication
+ * Call this once when the app starts
  */
-export async function initializeRevenueCat(userId?: string): Promise<void> {
+export const initializeRevenueCat = async (userId?: string): Promise<void> => {
+  // Skip if already initialized
+  if (isInitialized) {
+    console.log('🔒 RevenueCat already initialized');
+    return;
+  }
+
+  // Development mode bypass
+  if (DEV_MODE && BYPASS_PREMIUM) {
+    console.log('🔧 Development mode: Bypassing RevenueCat initialization');
+    isInitialized = true;
+    return;
+  }
+
   try {
-    // Don't initialize if no API key is set (future feature not enabled yet)
-    if (!ENV.REVENUECAT_API_KEY || ENV.REVENUECAT_API_KEY === 'your-revenuecat-api-key') {
-      console.log('RevenueCat: Not configured (feature not enabled yet)');
+    const apiKey = Platform.OS === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
+
+    if (!apiKey) {
+      console.warn('⚠️ RevenueCat API key not configured');
       return;
     }
 
-    if (isConfigured) {
-      console.log('RevenueCat: Already configured');
-      return;
-    }
-
-    // Configure debug logging in development
-    if (__DEV__) {
-      Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-    }
-
-    // Configure RevenueCat with API key
+    // Configure SDK
+    Purchases.setLogLevel(LOG_LEVEL.INFO);
+    
     await Purchases.configure({
-      apiKey: ENV.REVENUECAT_API_KEY,
-      appUserID: userId, // Optional: link purchases to your user ID
+      apiKey,
+      appUserID: userId, // Optional: set user ID for tracking
     });
 
-    isConfigured = true;
-    console.log('RevenueCat: Successfully configured');
+    isInitialized = true;
+    console.log('✅ RevenueCat initialized successfully');
 
-    // If user ID is provided, identify the user
-    if (userId) {
-      await identifyUser(userId);
-    }
-  } catch (error) {
-    console.error('RevenueCat: Failed to initialize:', error);
-    throw error;
-  }
-}
-
-/**
- * Identify/login user with RevenueCat
- * Links purchases to your user's account
- */
-export async function identifyUser(userId: string): Promise<void> {
-  try {
-    const { customerInfo } = await Purchases.logIn(userId);
-    console.log('RevenueCat: User identified', customerInfo.originalAppUserId);
-    return;
-  } catch (error) {
-    console.error('RevenueCat: Failed to identify user:', error);
-    throw error;
-  }
-}
-
-/**
- * Logout user from RevenueCat
- * Call this when user signs out
- */
-export async function logoutRevenueCat(): Promise<void> {
-  try {
-    await Purchases.logOut();
-    console.log('RevenueCat: User logged out');
-  } catch (error) {
-    console.error('RevenueCat: Failed to logout:', error);
-    throw error;
-  }
-}
-
-/**
- * Get current customer info and entitlements
- */
-export async function getCustomerInfo(): Promise<CustomerInfo> {
-  try {
+    // Log current customer info
     const customerInfo = await Purchases.getCustomerInfo();
-    return customerInfo;
+    console.log('💳 Customer info loaded:', {
+      entitlements: Object.keys(customerInfo.entitlements.active),
+      originalAppUserId: customerInfo.originalAppUserId,
+    });
   } catch (error) {
-    console.error('RevenueCat: Failed to get customer info:', error);
+    console.error('❌ RevenueCat initialization error:', error);
     throw error;
   }
-}
+};
 
 /**
  * Check if user has premium access
  */
-export async function isPremiumUser(): Promise<boolean> {
-  try {
-    const customerInfo = await getCustomerInfo();
-    const hasPremium = customerInfo.entitlements.active[ENTITLEMENTS.PREMIUM] !== undefined;
-    return hasPremium;
-  } catch (error) {
-    console.error('RevenueCat: Failed to check premium status:', error);
+export const checkPremiumStatus = async (): Promise<boolean> => {
+  // Development mode bypass
+  if (DEV_MODE && BYPASS_PREMIUM) {
+    console.log('🔧 Development mode: Granting premium access');
+    return true;
+  }
+
+  if (!isInitialized) {
+    console.warn('⚠️ RevenueCat not initialized');
     return false;
   }
-}
+
+  try {
+    const customerInfo = await Purchases.getCustomerInfo();
+    const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
+    
+    console.log('💎 Premium status:', isPremium);
+    return isPremium;
+  } catch (error) {
+    console.error('❌ Error checking premium status:', error);
+    return false;
+  }
+};
 
 /**
- * Get available offerings/packages
+ * Get available offerings (subscription packages)
  */
-export async function getOfferings(): Promise<PurchasesOffering | null> {
+export const getOfferings = async (): Promise<PurchasesOfferings | null> => {
+  if (!isInitialized) {
+    console.warn('⚠️ RevenueCat not initialized');
+    return null;
+  }
+
   try {
     const offerings = await Purchases.getOfferings();
-    if (offerings.current) {
-      return offerings.current;
-    }
-    console.warn('RevenueCat: No current offering available');
-    return null;
+    console.log('📦 Offerings loaded:', {
+      current: offerings.current?.identifier,
+      packages: offerings.current?.availablePackages.map(p => ({
+        identifier: p.identifier,
+        product: p.product.identifier,
+        price: p.product.priceString,
+      })),
+    });
+    return offerings;
   } catch (error) {
-    console.error('RevenueCat: Failed to get offerings:', error);
-    throw error;
+    console.error('❌ Error fetching offerings:', error);
+    return null;
   }
-}
+};
 
 /**
  * Purchase a package
  */
-export async function purchasePackage(
-  packageToPurchase: PurchasesPackage
-): Promise<{ customerInfo: CustomerInfo; productIdentifier: string }> {
+export const purchasePackage = async (
+  packageToPurchase: any
+): Promise<{ customerInfo: CustomerInfo; success: boolean }> => {
+  if (!isInitialized) {
+    throw new Error('RevenueCat not initialized');
+  }
+
   try {
-    const { customerInfo, productIdentifier } = await Purchases.purchasePackage(packageToPurchase);
-    console.log('RevenueCat: Purchase successful', productIdentifier);
-    return { customerInfo, productIdentifier };
+    console.log('💳 Attempting purchase:', packageToPurchase.identifier);
+    
+    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+    
+    const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
+    
+    console.log('✅ Purchase successful:', {
+      isPremium,
+      entitlements: Object.keys(customerInfo.entitlements.active),
+    });
+
+    return { customerInfo, success: isPremium };
   } catch (error: any) {
-    // User cancelled purchase
+    // User cancelled
     if (error.userCancelled) {
-      console.log('RevenueCat: Purchase cancelled by user');
-      throw new Error('Purchase cancelled');
+      console.log('ℹ️ User cancelled purchase');
+      throw new Error('USER_CANCELLED');
     }
-    console.error('RevenueCat: Purchase failed:', error);
+
+    console.error('❌ Purchase error:', error);
     throw error;
   }
-}
+};
 
 /**
- * Restore previous purchases
- * Required by Apple for apps with purchases
+ * Restore purchases (for users who reinstalled or switched devices)
  */
-export async function restorePurchases(): Promise<CustomerInfo> {
+export const restorePurchases = async (): Promise<CustomerInfo> => {
+  if (!isInitialized) {
+    throw new Error('RevenueCat not initialized');
+  }
+
   try {
+    console.log('🔄 Restoring purchases...');
     const customerInfo = await Purchases.restorePurchases();
-    console.log('RevenueCat: Purchases restored');
+    
+    const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
+    console.log('✅ Purchases restored:', {
+      isPremium,
+      entitlements: Object.keys(customerInfo.entitlements.active),
+    });
+
     return customerInfo;
   } catch (error) {
-    console.error('RevenueCat: Failed to restore purchases:', error);
+    console.error('❌ Error restoring purchases:', error);
     throw error;
   }
-}
+};
 
 /**
- * Sync purchases with RevenueCat
- * Useful after App Store purchase or subscription changes
+ * Get customer info (current subscription status)
  */
-export async function syncPurchases(): Promise<CustomerInfo> {
+export const getCustomerInfo = async (): Promise<CustomerInfo | null> => {
+  // Development mode bypass
+  if (DEV_MODE && BYPASS_PREMIUM) {
+    return null; // Return null but premium will be granted via dev flag
+  }
+
+  if (!isInitialized) {
+    console.warn('⚠️ RevenueCat not initialized');
+    return null;
+  }
+
   try {
-    const customerInfo = await Purchases.syncPurchases();
-    console.log('RevenueCat: Purchases synced');
+    const customerInfo = await Purchases.getCustomerInfo();
     return customerInfo;
   } catch (error) {
-    console.error('RevenueCat: Failed to sync purchases:', error);
-    throw error;
+    console.error('❌ Error getting customer info:', error);
+    return null;
   }
-}
+};
 
 /**
- * Get product information
+ * Identify user (call after authentication)
  */
-export async function getProducts(productIds: string[]): Promise<any[]> {
+export const identifyUser = async (userId: string): Promise<void> => {
+  if (!isInitialized) {
+    console.warn('⚠️ RevenueCat not initialized');
+    return;
+  }
+
   try {
-    const products = await Purchases.getProducts(productIds);
-    return products;
+    await Purchases.logIn(userId);
+    console.log('✅ User identified:', userId);
   } catch (error) {
-    console.error('RevenueCat: Failed to get products:', error);
+    console.error('❌ Error identifying user:', error);
     throw error;
   }
-}
+};
 
-// Export types for convenience
-export type { CustomerInfo, PurchasesOffering, PurchasesPackage };
+/**
+ * Log out user
+ */
+export const logoutUser = async (): Promise<void> => {
+  if (!isInitialized) {
+    return;
+  }
 
+  try {
+    await Purchases.logOut();
+    console.log('✅ User logged out from RevenueCat');
+  } catch (error) {
+    console.error('❌ Error logging out:', error);
+  }
+};

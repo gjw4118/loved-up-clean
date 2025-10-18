@@ -1,55 +1,71 @@
-// Simple Premium Status Hook - Development Mode Only
-// Replaces RevenueCat integration with simple environment-based checks
+// Premium Status Hook with RevenueCat Integration
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { checkPremiumStatus, getCustomerInfo } from '@/lib/purchases/revenuecat';
+import type { CustomerInfo } from 'react-native-purchases';
 
 export interface PremiumStatus {
   isPremium: boolean;
   loading: boolean;
   error: string | null;
-  customerInfo: any | null;
+  customerInfo: CustomerInfo | null;
   refetch: () => void;
 }
 
+// Development mode bypass flag
+const DEV_MODE = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
+const BYPASS_PREMIUM = process.env.EXPO_PUBLIC_BYPASS_PREMIUM === 'true';
+
 export const usePremiumStatus = (): PremiumStatus => {
   const [isPremium, setIsPremium] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 
-  // Development mode: bypass premium limits
-  const isDevMode = process.env.EXPO_PUBLIC_DEV_MODE === 'true';
-  const bypassPremium = process.env.EXPO_PUBLIC_BYPASS_PREMIUM === 'true';
-
-  useEffect(() => {
+  const fetchPremiumStatus = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Development mode: bypass premium checks
-    if (isDevMode && bypassPremium) {
-      console.log('🔧 Development mode: Bypassing premium limits');
-      setIsPremium(true);
+    try {
+      // Development mode: bypass premium checks
+      if (DEV_MODE && BYPASS_PREMIUM) {
+        console.log('🔧 Development mode: Bypassing premium limits');
+        setIsPremium(true);
+        setLoading(false);
+        return;
+      }
+
+      // Check RevenueCat for premium status
+      const premium = await checkPremiumStatus();
+      setIsPremium(premium);
+
+      // Get customer info for subscription details
+      const info = await getCustomerInfo();
+      setCustomerInfo(info);
+
+      console.log('💎 Premium status updated:', { isPremium: premium });
+    } catch (err: any) {
+      console.error('❌ Error fetching premium status:', err);
+      setError(err.message || 'Failed to check premium status');
+      setIsPremium(false); // Default to free tier on error
+    } finally {
       setLoading(false);
-      return;
     }
+  }, []);
 
-    // Default to free tier
-    setIsPremium(false);
-    setLoading(false);
-  }, [isDevMode, bypassPremium]);
+  useEffect(() => {
+    fetchPremiumStatus();
+  }, [fetchPremiumStatus]);
 
-  const refetch = () => {
-    // Simple refetch - just re-run the effect
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 100);
-  };
+  const refetch = useCallback(() => {
+    fetchPremiumStatus();
+  }, [fetchPremiumStatus]);
 
   return {
     isPremium,
     loading,
     error,
-    customerInfo: null,
+    customerInfo,
     refetch,
   };
 };

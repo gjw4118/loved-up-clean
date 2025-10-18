@@ -11,6 +11,8 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { VoiceRecorder } from '@/components/coach/VoiceRecorder';
 import { StatusBar } from '@/components/ui';
 import { useCoachVoice, type CoachMode } from '@/hooks/useCoachVoice';
+import { usePaywall } from '@/hooks/usePaywall';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { supabase } from '@/lib/database/supabase';
@@ -19,6 +21,8 @@ export default function CoachScreen() {
   const { isDark } = useTheme();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
+  const { isPremium, loading: premiumLoading } = usePremiumStatus();
+  const { presentPaywall } = usePaywall();
   const [mode, setMode] = useState<CoachMode>('conversation');
   const [coachState, coachActions] = useCoachVoice();
   const [recentTopics, setRecentTopics] = useState<string[]>([]);
@@ -82,6 +86,12 @@ export default function CoachScreen() {
   };
 
   const startSession = async () => {
+    // Check premium status first
+    if (!isPremium) {
+      await presentPaywall('coach_feature');
+      return;
+    }
+
     if (!coachState.hasPermissions) {
       Alert.alert(
         'Microphone Permission Required',
@@ -90,6 +100,7 @@ export default function CoachScreen() {
       );
       return;
     }
+
     await coachActions.startSession(mode);
   };
 
@@ -122,26 +133,37 @@ export default function CoachScreen() {
       >
         {/* Header with Speaker Toggle */}
         <View style={[styles.header, { paddingTop: Math.max(insets.top + 24, 70) }]}>
-          <Text style={[styles.headerTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
-            Coach
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <Text style={[styles.headerTitle, { color: isDark ? '#ffffff' : '#000000' }]}>
+              Coach
+            </Text>
+            
+            {/* Premium Badge */}
+            {!isPremium && !premiumLoading && (
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>PREMIUM</Text>
+              </View>
+            )}
+          </View>
           
           {/* Speaker Mode Toggle */}
-          <TouchableOpacity
-            onPress={coachActions.toggleSpeakerMode}
-            style={[
-              styles.speakerButton,
-              {
-                backgroundColor: coachState.isSpeakerMode 
-                  ? '#FF6B35'
-                  : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-              }
-            ]}
-          >
-            <Text style={{ fontSize: 20 }}>
-              {coachState.isSpeakerMode ? '🔊' : '🔇'}
-            </Text>
-          </TouchableOpacity>
+          {coachState.isActive && (
+            <TouchableOpacity
+              onPress={coachActions.toggleSpeakerMode}
+              style={[
+                styles.speakerButton,
+                {
+                  backgroundColor: coachState.isSpeakerMode 
+                    ? '#FF6B35'
+                    : isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                }
+              ]}
+            >
+              <Text style={{ fontSize: 20 }}>
+                {coachState.isSpeakerMode ? '🔊' : '🔇'}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Mode Toggle */}
@@ -404,6 +426,19 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '700',
     lineHeight: 42,
+    marginRight: 12,
+  },
+  premiumBadge: {
+    backgroundColor: '#FF6B35',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  premiumBadgeText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   speakerButton: {
     width: 44,

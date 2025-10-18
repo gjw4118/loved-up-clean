@@ -15,6 +15,7 @@ import '../../global.css';
 
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/lib/contexts/ThemeContext';
 import { setupDeepLinkListeners, handleDeepLink } from '@/lib/linking/deepLinkHandler';
+import { initializeRevenueCat, identifyUser } from '@/lib/purchases/revenuecat';
 
 
 
@@ -83,6 +84,7 @@ function RootLayoutNav() {
             <HeroUINativeProvider>
               <AuthProvider>
               <DeepLinkHandler />
+              <RevenueCatInitializer />
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -163,6 +165,43 @@ function DeepLinkHandler() {
 
     return cleanup;
   }, [user]);
+
+  return null;
+}
+
+// Initialize RevenueCat and identify user
+function RevenueCatInitializer() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Initialize RevenueCat when app starts
+    const init = async () => {
+      try {
+        await initializeRevenueCat();
+        console.log('✅ RevenueCat initialized');
+      } catch (error) {
+        console.error('❌ RevenueCat initialization failed:', error);
+      }
+    };
+
+    init();
+  }, []);
+
+  useEffect(() => {
+    // Identify user when authenticated
+    if (user?.id) {
+      const identify = async () => {
+        try {
+          await identifyUser(user.id);
+          console.log('✅ User identified in RevenueCat:', user.id);
+        } catch (error) {
+          console.error('❌ User identification failed:', error);
+        }
+      };
+
+      identify();
+    }
+  }, [user?.id]);
 
   return null;
 }
