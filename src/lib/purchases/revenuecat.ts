@@ -142,8 +142,18 @@ export const purchasePackage = async (
     
     console.log('✅ Purchase successful:', {
       isPremium,
-      entitlements: Object.keys(customerInfo.entitlements.active),
+      lookingFor: PREMIUM_ENTITLEMENT,
+      activeEntitlements: Object.keys(customerInfo.entitlements.active),
+      allEntitlements: Object.keys(customerInfo.entitlements.all),
     });
+
+    if (!isPremium && Object.keys(customerInfo.entitlements.active).length === 0) {
+      console.warn('⚠️ No entitlements found! Check RevenueCat Dashboard:');
+      console.warn('1. Go to: https://app.revenuecat.com/entitlements');
+      console.warn('2. Create or verify "premium" entitlement exists');
+      console.warn('3. Link product "deeper_premium" to "premium" entitlement');
+      console.warn('4. Make sure entitlement is marked as "Current"');
+    }
 
     return { customerInfo, success: isPremium };
   } catch (error: any) {
