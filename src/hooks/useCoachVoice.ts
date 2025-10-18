@@ -384,6 +384,10 @@ export const useCoachVoice = (): [CoachVoiceState, CoachVoiceActions] => {
     }
 
     try {
+      if (!supabase) {
+        throw new Error('Supabase not configured');
+      }
+
       setState(prev => ({ ...prev, isProcessing: true, error: null }));
 
       const userMessage: CoachMessage = {
@@ -398,9 +402,42 @@ export const useCoachVoice = (): [CoachVoiceState, CoachVoiceActions] => {
         currentMessage: message,
       }));
 
-      // For now, use a simple mock response
-      // TODO: Implement coach-ai edge function
-      const coachResponse = `I understand you're talking about "${message.substring(0, 50)}". That's an important topic in relationships. Can you tell me more about how this makes you feel?`;
+      // Get Supabase URL and key
+      const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase configuration missing');
+      }
+
+      // Call coach-ai edge function
+      console.log('🤖 Calling coach AI API...');
+      const response = await fetch(`${supabaseUrl}/functions/v1/coach-ai`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
+          message,
+          mode: state.mode,
+          conversationHistory: state.conversationHistory.slice(-6),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Coaching service failed');
+      }
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Coaching service failed');
+      }
+
+      const coachResponse = result.data.response;
+      console.log('💡 Got coach response');
 
       const coachMessage: CoachMessage = {
         role: 'coach',
