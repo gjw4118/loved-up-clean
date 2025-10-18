@@ -1,14 +1,17 @@
-// GoDeeper App - Learn Screen
-// Resources for relationship growth: podcasts, articles, blogs, and social media
+// GoDeeper App - More Screen
+// Profile access and resources for relationship growth
 
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Linking, Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import { DeckBentoCard } from '@/components/cards';
 import { StatusBar } from '@/components/ui';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 
 // Define resource types
@@ -111,9 +114,35 @@ const LEARNING_RESOURCES: Resource[] = [
   },
 ];
 
-export default function LearnScreen() {
+export default function MoreScreen() {
   const { theme, isDark } = useTheme();
+  const { user, profile } = useAuth();
   const [navigatingToResource, setNavigatingToResource] = useState<string | null>(null);
+
+  const getInitial = () => {
+    if (profile?.first_name) {
+      return profile.first_name[0].toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  const getName = () => {
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'User';
+  };
+
+  const handleProfilePress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/settings');
+  };
 
   const handleResourceSelect = async (resource: Resource) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -154,16 +183,50 @@ export default function LearnScreen() {
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
       
-      {/* Header */}
-      <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 }}>
+      {/* Profile Header */}
+      <Pressable onPress={handleProfilePress} style={styles.profileHeader}>
+        <BlurView 
+          intensity={isDark ? 30 : 20}
+          tint={isDark ? 'dark' : 'light'}
+          style={styles.profileCard}
+        >
+          <LinearGradient
+            colors={isDark 
+              ? ['rgba(255, 255, 255, 0.05)', 'rgba(255, 255, 255, 0.02)'] 
+              : ['rgba(0, 0, 0, 0.02)', 'rgba(0, 0, 0, 0.05)']
+            }
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.profileContent}>
+            <LinearGradient
+              colors={['#667eea', '#764ba2']}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText}>{getInitial()}</Text>
+            </LinearGradient>
+            <View style={styles.profileInfo}>
+              <Text style={[styles.profileName, { color: isDark ? '#ffffff' : '#000000' }]}>
+                {getName()}
+              </Text>
+              <Text style={[styles.profileEmail, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
+                {user?.email || 'View profile'}
+              </Text>
+            </View>
+            <Text style={[styles.chevron, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>›</Text>
+          </View>
+        </BlurView>
+      </Pressable>
+
+      {/* Resources Section Header */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 24, paddingBottom: 8 }}>
         <Text 
-          className="text-3xl font-bold text-gray-900 dark:text-white mb-2"
+          className="text-2xl font-bold text-gray-900 dark:text-white mb-1"
           style={{ letterSpacing: 0.5 }}
         >
-          Learn
+          Resources
         </Text>
-        <Text className="text-base text-gray-600 dark:text-gray-300">
-          Resources to deepen your relationships
+        <Text className="text-sm text-gray-600 dark:text-gray-300">
+          Explore content to deepen your relationships
         </Text>
       </View>
 
@@ -283,3 +346,49 @@ export default function LearnScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  profileHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  profileCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  profileContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  profileEmail: {
+    fontSize: 14,
+  },
+  chevron: {
+    fontSize: 28,
+    fontWeight: '300',
+  },
+});
