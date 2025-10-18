@@ -40,12 +40,14 @@ export const initializeRevenueCat = async (userId?: string): Promise<void> => {
     const apiKey = Platform.OS === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
 
     if (!apiKey) {
-      console.warn('⚠️ RevenueCat API key not configured');
+      console.warn('⚠️ RevenueCat API key not configured - premium features will not work');
       return;
     }
 
+    console.log('🔒 Initializing RevenueCat with key:', apiKey.substring(0, 10) + '...');
+
     // Configure SDK
-    Purchases.setLogLevel(LOG_LEVEL.INFO);
+    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     
     await Purchases.configure({
       apiKey,
@@ -63,7 +65,8 @@ export const initializeRevenueCat = async (userId?: string): Promise<void> => {
     });
   } catch (error) {
     console.error('❌ RevenueCat initialization error:', error);
-    throw error;
+    // Don't throw - just log and continue without premium features
+    isInitialized = false;
   }
 };
 
@@ -207,8 +210,14 @@ export const getCustomerInfo = async (): Promise<CustomerInfo | null> => {
  * Identify user (call after authentication)
  */
 export const identifyUser = async (userId: string): Promise<void> => {
+  // Development mode bypass
+  if (DEV_MODE && BYPASS_PREMIUM) {
+    console.log('🔧 Development mode: Skipping user identification');
+    return;
+  }
+
   if (!isInitialized) {
-    console.warn('⚠️ RevenueCat not initialized');
+    console.warn('⚠️ RevenueCat not initialized - skipping user identification');
     return;
   }
 
@@ -217,7 +226,7 @@ export const identifyUser = async (userId: string): Promise<void> => {
     console.log('✅ User identified:', userId);
   } catch (error) {
     console.error('❌ Error identifying user:', error);
-    throw error;
+    // Don't throw - just log and continue
   }
 };
 
