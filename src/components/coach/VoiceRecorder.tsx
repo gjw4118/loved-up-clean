@@ -1,12 +1,12 @@
 // Voice Recorder Component
 // Provides UI for recording voice with visual feedback
 
-import React from 'react';
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { VoiceWaveform, WaveformState } from './VoiceWaveform';
-import { useTheme } from '@/lib/contexts/ThemeContext';
 
 interface VoiceRecorderProps {
   isRecording: boolean;

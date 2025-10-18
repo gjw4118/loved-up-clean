@@ -1,13 +1,11 @@
-import * as FileSystem from 'expo-file-system';
 import type {
-  AudioValidationResult,
-  STTOptions,
-  TTS_QUALITY,
-  TTSOptions,
-  VOICE_MODELS,
-  VoiceModel,
-  VoiceProvider
+    AudioValidationResult,
+    STTOptions,
+    TTSOptions,
+    VoiceModel,
+    VoiceProvider
 } from '@/types/coach';
+import * as FileSystem from 'expo-file-system';
 
 /**
  * AI Voice Service for GoDeeper

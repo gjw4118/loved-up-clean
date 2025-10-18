@@ -384,6 +384,64 @@ export interface Database {
           unique_users?: number
         }
       }
+      coach_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          mode: 'conversation' | 'guidance'
+          started_at: string
+          ended_at: string | null
+          duration_seconds: number | null
+          transcript: Json | null
+          feedback: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          mode: 'conversation' | 'guidance'
+          started_at?: string
+          ended_at?: string | null
+          duration_seconds?: number | null
+          transcript?: Json | null
+          feedback?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          mode?: 'conversation' | 'guidance'
+          started_at?: string
+          ended_at?: string | null
+          duration_seconds?: number | null
+          transcript?: Json | null
+          feedback?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      coach_topics: {
+        Row: {
+          id: string
+          session_id: string
+          topic: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          topic: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          topic?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

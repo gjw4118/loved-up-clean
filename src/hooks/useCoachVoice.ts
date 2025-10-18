@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Audio } from 'expo-av';
-import { Alert, Platform } from 'react-native';
 import { aiVoiceService } from '@/lib/ai/voice-service';
 import { supabase } from '@/lib/database/supabase';
-import type { CoachMode, CoachMessage, CoachVoiceState, CoachVoiceActions } from '@/types/coach';
+import type { CoachMessage, CoachMode, CoachVoiceActions, CoachVoiceState } from '@/types/coach';
+import { Audio } from 'expo-av';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert } from 'react-native';
 
 export { type CoachMode } from '@/types/coach';
 
